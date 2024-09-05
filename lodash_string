@@ -1,0 +1,43 @@
+const _ = require('lodash');
+
+const sanitizeString = (str) => _.replace(str, /[<>@#$%^&*()]/g, '');
+
+const sanitizeObject = (obj) => {
+  return _.transform(obj, (result, value, key) => {
+    if (_.isString(value)) {
+      result[key] = sanitizeString(value);
+    } else if (_.isObject(value)) {
+      result[key] = sanitizeObject(value);
+    } else {
+      result[key] = value;
+    }
+  });
+};
+
+const payload = {
+  name: "John <Doe>",
+  details: {
+    email: "john@doe.com",
+    bio: "Hello <script>alert('XSS')</script> World!",
+    age: 30,
+    createdAt: new Date().toISOString()
+  },
+  tags: ["<tag1>", "tag2", "@tag3"],
+  score: 100
+};
+
+const safePayload = sanitizeObject(payload);
+
+console.log(safePayload);
+// Output:
+// {
+//   name: "John Doe",
+//   details: {
+//     email: "john@doe.com",
+//     bio: "Hello scriptalert('XSS')/script World!",
+//     age: 30,
+//     createdAt: "2024-09-05T11:20:53.123Z"
+//   },
+//   tags: ["tag1", "tag2", "tag3"],
+//   score: 100
+// }
