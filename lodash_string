@@ -6,13 +6,29 @@ const sanitizeObject = (obj) => {
   return _.transform(obj, (result, value, key) => {
     if (_.isString(value)) {
       result[key] = sanitizeString(value);
-    } else if (_.isObject(value)) {
+    } else if (_.isObject(value) && !_.isDate(value)) {
       result[key] = sanitizeObject(value);
     } else {
       result[key] = value;
     }
   });
 };
+
+const sanitizePayload = (payload) => {
+  if (_.isArray(payload)) {
+    return payload.map(item => sanitizeObject(item));
+  } else if (_.isObject(payload)) {
+    return sanitizeObject(payload);
+  }
+  return payload;
+};
+
+module.exports = {
+  sanitizePayload
+};
+
+
+const { sanitizePayload } = require('./sanitizer');
 
 const payload = {
   name: "John <Doe>",
@@ -26,7 +42,7 @@ const payload = {
   score: 100
 };
 
-const safePayload = sanitizeObject(payload);
+const safePayload = sanitizePayload(payload);
 
 console.log(safePayload);
 // Output:
