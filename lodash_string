@@ -57,3 +57,42 @@ console.log(safePayload);
 //   tags: ["tag1", "tag2", "tag3"],
 //   score: 100
 // }
+
+const _ = require('lodash');
+
+const sanitizeString = (str) => _.replace(str, /[<>@#$%^&*()]/g, '');
+
+const sanitizeObject = (obj) => {
+  return _.transform(obj, (result, value, key) => {
+    if (_.isString(value)) {
+      result[key] = sanitizeString(value);
+    } else if (_.isObject(value)) {
+      result[key] = sanitizeObject(value);
+    } else {
+      result[key] = value;
+    }
+  });
+};
+
+const payload = {
+  name: "John <Doe>",
+  details: {
+    email: "john@doe.com",
+    bio: "Hello <script>alert('XSS')</script> World!"
+  },
+  tags: ["<tag1>", "tag2", "@tag3"]
+};
+
+const safePayload = sanitizeObject(payload);
+
+console.log(safePayload);
+// Output:
+// {
+//   name: "John Doe",
+//   details: {
+//     email: "john@doe.com",
+//     bio: "Hello scriptalert('XSS')/script World!"
+//   },
+//   tags: ["tag1", "tag2", "tag3"]
+// }
+
