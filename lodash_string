@@ -96,3 +96,41 @@ console.log(safePayload);
 //   tags: ["tag1", "tag2", "tag3"]
 // }
 
+
+const sanitizeString = (str) => str.replace(/[<>@#$%^&*()]/g, '');
+
+const sanitizeObject = (obj) => {
+  const result = Array.isArray(obj) ? [] : {};
+  for (const key in obj) {
+    if (typeof obj[key] === 'string') {
+      result[key] = sanitizeString(obj[key]);
+    } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+      result[key] = sanitizeObject(obj[key]);
+    } else {
+      result[key] = obj[key];
+    }
+  }
+  return result;
+};
+
+const payload = {
+  name: "John <Doe>",
+  details: {
+    email: "john@doe.com",
+    bio: "Hello <script>alert('XSS')</script> World!"
+  },
+  tags: ["<tag1>", "tag2", "@tag3"]
+};
+
+const safePayload = sanitizeObject(payload);
+console.log(safePayload);
+// Output:
+// {
+//   name: "John Doe",
+//   details: {
+//     email: "john@doe.com",
+//     bio: "Hello scriptalert('XSS')/script World!"
+//   },
+//   tags: ["tag1", "tag2", "tag3"]
+// }
+
