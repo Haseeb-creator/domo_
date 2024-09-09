@@ -1,0 +1,18 @@
+
+
+
+
+const allowedDomains = ['example.com', 'another-trusted-site.com'];
+
+function isValidUrl(url) {
+    try {
+        const parsedUrl = new URL(url);
+        return allowedDomains.includes(parsedUrl.hostname);
+    } catch (err) {
+        return false;
+    }
+}
+
+// Example URL
+const url = 'https://example.com/api/usertoken/bi';
+console.log(isValidUrl(url)); // Output: true
