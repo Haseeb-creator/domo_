@@ -1,3 +1,39 @@
+const sanitize = require('sanitize')();
+
+function sanitizePayload(req, res, next) {
+    Object.keys(req.body).forEach(key => {
+        req.body[key] = sanitize.value(req.body[key], 'string');
+    });
+    next();
+}
+
+module.exports = sanitizePayload;
+
+const express = require('express');
+const bodyParser = require('body-parser');
+const sanitizePayload = require('./sanitizePayload'); // Assuming the function is in a file named sanitizePayload.js
+
+const app = express();
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// Apply the sanitizePayload middleware to routes that need sanitization
+app.post('/submit', sanitizePayload, (req, res) => {
+    const sanitizedPayload = req.body;
+    res.send(`Sanitized payload: ${JSON.stringify(sanitizedPayload)}`);
+});
+
+app.post('/another-route', sanitizePayload, (req, res) => {
+    const sanitizedPayload = req.body;
+    res.send(`Sanitized payload: ${JSON.stringify(sanitizedPayload)}`);
+});
+
+app.listen(3000, () => {
+    console.log('Server is running on port 3000');
+});
+
+
+
 // middle ware
 app.use((req, res, next) => {
     for (const key in req.body) {
