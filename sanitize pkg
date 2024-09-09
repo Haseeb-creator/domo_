@@ -1,15 +1,21 @@
 
 // recursive reduce function. 
-0: function sanitizePayload(payload) {
+const sanitize = require('sanitize');
+
+function sanitizePayload(payload) {
     if (typeof payload !== 'object' || payload === null) {
         return sanitize.value(payload, typeof payload);
     }
 
-    return Object.keys(payload).reduce((sanitized, key) => {
-        sanitized[key] = sanitizePayload(payload[key]);
-        return sanitized;
-    }, Array.isArray(payload) ? [] : {});
+    const sanitized = Array.isArray(payload) ? [] : {};
+    for (const key in payload) {
+        if (payload.hasOwnProperty(key)) {
+            sanitized[key] = sanitizePayload(payload[key]);
+        }
+    }
+    return sanitized;
 }
+
 
 1:const sanitize = require('sanitize')();
 
