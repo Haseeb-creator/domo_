@@ -1,3 +1,13 @@
+// middle ware
+app.use((req, res, next) => {
+    for (const key in req.body) {
+        if (req.body.hasOwnProperty(key)) {
+            req.body[key] = sanitize.value(req.body[key], 'string');
+        }
+    }
+    next();
+});
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const sanitize = require('sanitize');
