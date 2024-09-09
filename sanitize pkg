@@ -9,6 +9,23 @@ function sanitizePayload(payload) {
 
     const sanitized = Array.isArray(payload) ? [] : {};
     for (const key in payload) {
+        if (Object.prototype.hasOwnProperty.call(payload, key)) {
+            sanitized[key] = sanitizePayload(payload[key]);
+        }
+    }
+    return sanitized;
+}
+
+
+const sanitize = require('sanitize');
+
+function sanitizePayload(payload) {
+    if (typeof payload !== 'object' || payload === null) {
+        return sanitize.value(payload, typeof payload);
+    }
+
+    const sanitized = Array.isArray(payload) ? [] : {};
+    for (const key in payload) {
         if (payload.hasOwnProperty(key)) {
             sanitized[key] = sanitizePayload(payload[key]);
         }
