@@ -1,3 +1,14 @@
+// using a reduce function
+const sanitize = require('sanitize')();
+
+function sanitizePayload(payload) {
+    return Object.keys(payload).reduce((sanitized, key) => {
+        sanitized[key] = sanitize.value(payload[key], 'string');
+        return sanitized;
+    }, {});
+}
+
+
 const sanitize = require('sanitize')();
 
 function sanitizePayload(req, res, next) {
