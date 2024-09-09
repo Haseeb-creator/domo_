@@ -1,3 +1,43 @@
+//1
+const sanitizeHtml = require('sanitize-html');
+
+function sanitizePayload(payload) {
+    if (typeof payload === 'string') {
+        return sanitizeHtml(payload);
+    } else if (payload instanceof Date) {
+        return payload;
+    } else if (typeof payload !== 'object' || payload === null) {
+        return payload;
+    }
+
+    const sanitized = Array.isArray(payload) ? [] : {};
+    for (const key in payload) {
+        if (Object.prototype.hasOwnProperty.call(payload, key)) {
+            sanitized[key] = sanitizePayload(payload[key]);
+        }
+    }
+    return sanitized;
+}
+
+// Example payload
+const payload = {
+    name: "<script>alert('xss');</script>",
+    age: 30,
+    birthdate: new Date('1990-01-01T00:00:00Z'),
+    hobbies: ["<b>coding</b>", "reading"],
+    address: {
+        street: "<i>Main St</i>",
+        city: "Somewhere",
+        zip: 12345
+    },
+    isActive: true,
+    isVerified: false
+};
+
+const sanitizedPayload = sanitizePayload(payload);
+console.log(sanitizedPayload);
+
+//2
 const sanitizeHtml = require('sanitize-html');
 
 
