@@ -1,0 +1,12 @@
+// Array of objects
+let data = [
+    { name: 'apple', quantity: 3 },
+    { name: 'banana', quantity: 2 },
+    { name: 'cherry', quantity: 5 },
+    { name: 'date', quantity: 4 }
+];
+
+// Sorting by the quantity property
+let sortedData = data.sort((a, b) => a.quantity - b.quantity);
+
+console.log(sortedData);
