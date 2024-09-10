@@ -1,0 +1,39 @@
+const Joi = require('joi');
+
+// Define the validation schema
+const schema = Joi.object({
+  route: Joi.string().required(),
+  methodName: Joi.string().required(),
+  methodType: Joi.string().valid('GET', 'POST', 'PUT', 'DELETE').required(),
+  payload: Joi.object({
+    // Define your payload validation here
+    name: Joi.string().min(3).max(30).required(),
+    age: Joi.number().integer().min(0).max(120).required()
+  }).required(),
+  headers: Joi.object({
+    'x-custom-header': Joi.string().required()
+  }).unknown(true) // Allow other headers that are not explicitly defined
+});
+
+// Example data to validate
+const data = {
+  route: '/example',
+  methodName: 'exampleMethod',
+  methodType: 'POST',
+  payload: {
+    name: 'John Doe',
+    age: 25
+  },
+  headers: {
+    'x-custom-header': 'customValue'
+  }
+};
+
+// Validate the data
+const { error, value } = schema.validate(data);
+
+if (error) {
+  console.error('Validation error:', error.details);
+} else {
+  console.log('Validated data:', value);
+}
