@@ -73,20 +73,22 @@ const errorHandler = (err, req, res, next) => {
     err.statusCode = err.statusCode || 500;
     err.status = err.status || 'error';
 
-    // Include stack trace for 500 errors
+    // Include only the important part of the stack trace for 500 errors
     const response = {
         status: err.status,
         message: err.message
     };
 
     if (err.statusCode === 500) {
-        response.stack = err.stack;
+        const stackLines = err.stack.split('\n');
+        response.stack = stackLines.slice(0, 3).join('\n'); // Include only the first 3 lines
     }
 
     res.status(err.statusCode).json(response);
 };
 
 module.exports = errorHandler;
+
 
 
 
