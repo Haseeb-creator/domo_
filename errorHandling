@@ -22,11 +22,47 @@ class NotFoundError extends AppError {
     }
 }
 
+class DataValidationError extends AppError {
+    constructor(message) {
+        super(message, 422);
+    }
+}
+
+class AuthError extends AppError {
+    constructor(message) {
+        super(message, 401);
+    }
+}
+
+class ServerError extends AppError {
+    constructor(message) {
+        super(message, 500);
+    }
+}
+
+class ForbiddenError extends AppError {
+    constructor(message) {
+        super(message, 403);
+    }
+}
+
+class DataError extends AppError {
+    constructor(message) {
+        super(message, 409);
+    }
+}
+
 module.exports = {
     AppError,
     ValidationError,
-    NotFoundError
+    NotFoundError,
+    DataValidationError,
+    AuthError,
+    ServerError,
+    ForbiddenError,
+    DataError
 };
+
 
 
 utils/errorHandler.js
