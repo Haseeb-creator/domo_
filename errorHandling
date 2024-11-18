@@ -73,13 +73,21 @@ const errorHandler = (err, req, res, next) => {
     err.statusCode = err.statusCode || 500;
     err.status = err.status || 'error';
 
-    res.status(err.statusCode).json({
+    // Include stack trace for 500 errors
+    const response = {
         status: err.status,
         message: err.message
-    });
+    };
+
+    if (err.statusCode === 500) {
+        response.stack = err.stack;
+    }
+
+    res.status(err.statusCode).json(response);
 };
 
 module.exports = errorHandler;
+
 
 
 server or app :
