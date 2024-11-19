@@ -1,0 +1,200 @@
+register logic :
+
+Certainly! Here's how you can create a Node.js condition to handle the different combinations of `usertype` and `registrationtype`:
+
+```javascript
+const express = require('express');
+const app = express();
+const port = 3000;
+
+// Middleware to parse JSON bodies
+app.use(express.json());
+
+app.post('/register', (req, res) => {
+    const { usertype, registrationtype, data } = req.body;
+
+    if (!usertype || !registrationtype || !data) {
+        return res.status(400).send('Usertype, registrationtype, and data are required');
+    }
+
+    if (usertype === 'standard' && registrationtype === 'conversion') {
+        saveStandardConversionData(data);
+        res.send('Standard user (conversion) registered successfully');
+    } else if (usertype === 'standard' && registrationtype === 'invite') {
+        saveStandardInviteData(data);
+        res.send('Standard user (invite) registered successfully');
+    } else if (usertype === 'standardContact' && registrationtype === 'seamless') {
+        saveStandardContactSeamlessData(data);
+        res.send('Standard contact (seamless) registered successfully');
+    } else if (usertype === 'standardContact' && registrationtype === 'simplified') {
+        saveStandardContactSimplifiedData(data);
+        res.send('Standard contact (simplified) registered successfully');
+    } else {
+        res.status(400).send('Invalid usertype or registrationtype');
+    }
+});
+
+function saveStandardConversionData(data) {
+    // Logic to save standard conversion data
+    console.log('Saving standard conversion data:', data);
+}
+
+function saveStandardInviteData(data) {
+    // Logic to save standard invite data
+    console.log('Saving standard invite data:', data);
+}
+
+function saveStandardContactSeamlessData(data) {
+    // Logic to save standard contact seamless data
+    console.log('Saving standard contact seamless data:', data);
+}
+
+function saveStandardContactSimplifiedData(data) {
+    // Logic to save standard contact simplified data
+    console.log('Saving standard contact simplified data:', data);
+}
+
+app.listen(port, () => {
+    console.log(`Server running at http://localhost:${port}`);
+});
+```
+
+In this example:
+- The `usertype` and `registrationtype` are checked for specific combinations.
+- Depending on the combination, the appropriate function is called to handle the data saving.
+- Each function (`saveStandardConversionData`, `saveStandardInviteData`, `saveStandardContactSeamlessData`, `saveStandardContactSimplifiedData`) contains the logic to save the data.
+
+
+
+
+test caeses : 
+
+
+Sure! Here's how you can write Jest test cases to verify that the data is being handled correctly in your Node.js application. We'll use the `supertest` library to test the endpoints.
+
+First, make sure you have Jest and supertest installed:
+
+```bash
+npm install jest supertest --save-dev
+```
+
+Next, create a test file, for example `register.test.js`, and add the following test cases:
+
+```javascript
+const request = require('supertest');
+const express = require('express');
+
+const app = express();
+app.use(express.json());
+
+// Mock the functions to avoid actual data saving
+const saveStandardConversionData = jest.fn();
+const saveStandardInviteData = jest.fn();
+const saveStandardContactSeamlessData = jest.fn();
+const saveStandardContactSimplifiedData = jest.fn();
+
+app.post('/register', (req, res) => {
+    const { usertype, registrationtype, data } = req.body;
+
+    if (!usertype || !registrationtype || !data) {
+        return res.status(400).send('Usertype, registrationtype, and data are required');
+    }
+
+    if (usertype === 'standard' && registrationtype === 'conversion') {
+        saveStandardConversionData(data);
+        res.send('Standard user (conversion) registered successfully');
+    } else if (usertype === 'standard' && registrationtype === 'invite') {
+        saveStandardInviteData(data);
+        res.send('Standard user (invite) registered successfully');
+    } else if (usertype === 'standardContact' && registrationtype === 'seamless') {
+        saveStandardContactSeamlessData(data);
+        res.send('Standard contact (seamless) registered successfully');
+    } else if (usertype === 'standardContact' && registrationtype === 'simplified') {
+        saveStandardContactSimplifiedData(data);
+        res.send('Standard contact (simplified) registered successfully');
+    } else {
+        res.status(400).send('Invalid usertype or registrationtype');
+    }
+});
+
+describe('POST /register', () => {
+    it('should register a standard user with conversion', async () => {
+        const response = await request(app)
+            .post('/register')
+            .send({ usertype: 'standard', registrationtype: 'conversion', data: { name: 'John Doe' } });
+
+        expect(response.status).toBe(200);
+        expect(response.text).toBe('Standard user (conversion) registered successfully');
+        expect(saveStandardConversionData).toHaveBeenCalledWith({ name: 'John Doe' });
+    });
+
+    it('should register a standard user with invite', async () => {
+        const response = await request(app)
+            .post('/register')
+            .send({ usertype: 'standard', registrationtype: 'invite', data: { name: 'Jane Doe' } });
+
+        expect(response.status).toBe(200);
+        expect(response.text).toBe('Standard user (invite) registered successfully');
+        expect(saveStandardInviteData).toHaveBeenCalledWith({ name: 'Jane Doe' });
+    });
+
+    it('should register a standard contact with seamless', async () => {
+        const response = await request(app)
+            .post('/register')
+            .send({ usertype: 'standardContact', registrationtype: 'seamless', data: { name: 'Alice' } });
+
+        expect(response.status).toBe(200);
+        expect(response.text).toBe('Standard contact (seamless) registered successfully');
+        expect(saveStandardContactSeamlessData).toHaveBeenCalledWith({ name: 'Alice' });
+    });
+
+    it('should register a standard contact with simplified', async () => {
+        const response = await request(app)
+            .post('/register')
+            .send({ usertype: 'standardContact', registrationtype: 'simplified', data: { name: 'Bob' } });
+
+        expect(response.status).toBe(200);
+        expect(response.text).toBe('Standard contact (simplified) registered successfully');
+        expect(saveStandardContactSimplifiedData).toHaveBeenCalledWith({ name: 'Bob' });
+    });
+
+    it('should return 400 for missing fields', async () => {
+        const response = await request(app)
+            .post('/register')
+            .send({ usertype: 'standard', registrationtype: 'conversion' });
+
+        expect(response.status).toBe(400);
+        expect(response.text).toBe('Usertype, registrationtype, and data are required');
+    });
+
+    it('should return 400 for invalid usertype or registrationtype', async () => {
+        const response = await request(app)
+            .post('/register')
+            .send({ usertype: 'invalidType', registrationtype: 'conversion', data: { name: 'Invalid' } });
+
+        expect(response.status).toBe(400);
+        expect(response.text).toBe('Invalid usertype or registrationtype');
+    });
+});
+```
+
+In this example:
+- We use `supertest` to make HTTP requests to our Express app.
+- We mock the data-saving functions to avoid actual data persistence.
+- We test various scenarios, including valid registrations and error cases.
+
+To run the tests, add the following script to your `package.json`:
+
+```json
+"scripts": {
+    "test": "jest"
+}
+```
+
+Then, run the tests using:
+
+```bash
+npm test
+```
+
+This setup will help you verify that your registration logic is working correctly and that the data is being handled as expected. Let me know if you need any further assistance!
