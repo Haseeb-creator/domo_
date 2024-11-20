@@ -1,0 +1,137 @@
+Sure! Here's how you can use the Chai framework along with Mocha to test your Node.js application. First, make sure you have Mocha, Chai, and supertest installed:
+
+```bash
+npm install mocha chai supertest --save-dev
+```
+
+Next, create a test file, for example `register.test.js`, and add the following test cases:
+
+```javascript
+const chai = require('chai');
+const chaiHttp = require('chai-http');
+const express = require('express');
+const expect = chai.expect;
+
+chai.use(chaiHttp);
+
+const app = express();
+app.use(express.json());
+
+// Mock the functions to avoid actual data saving
+const saveStandardConversionData = (data) => console.log('Saving standard conversion data:', data);
+const saveStandardInviteData = (data) => console.log('Saving standard invite data:', data);
+const saveStandardContactSeamlessData = (data) => console.log('Saving standard contact seamless data:', data);
+const saveStandardContactSimplifiedData = (data) => console.log('Saving standard contact simplified data:', data);
+
+app.post('/register', (req, res) => {
+    const { usertype, registrationtype, data } = req.body;
+
+    if (!usertype || !registrationtype || !data) {
+        return res.status(400).send('Usertype, registrationtype, and data are required');
+    }
+
+    if (usertype === 'standard' && registrationtype === 'conversion') {
+        saveStandardConversionData(data);
+        res.send('Standard user (conversion) registered successfully');
+    } else if (usertype === 'standard' && registrationtype === 'invite') {
+        saveStandardInviteData(data);
+        res.send('Standard user (invite) registered successfully');
+    } else if (usertype === 'standardContact' && registrationtype === 'seamless') {
+        saveStandardContactSeamlessData(data);
+        res.send('Standard contact (seamless) registered successfully');
+    } else if (usertype === 'standardContact' && registrationtype === 'simplified') {
+        saveStandardContactSimplifiedData(data);
+        res.send('Standard contact (simplified) registered successfully');
+    } else {
+        res.status(400).send('Invalid usertype or registrationtype');
+    }
+});
+
+describe('POST /register', () => {
+    it('should register a standard user with conversion', (done) => {
+        chai.request(app)
+            .post('/register')
+            .send({ usertype: 'standard', registrationtype: 'conversion', data: { name: 'John Doe' } })
+            .end((err, res) => {
+                expect(res).to.have.status(200);
+                expect(res.text).to.equal('Standard user (conversion) registered successfully');
+                done();
+            });
+    });
+
+    it('should register a standard user with invite', (done) => {
+        chai.request(app)
+            .post('/register')
+            .send({ usertype: 'standard', registrationtype: 'invite', data: { name: 'Jane Doe' } })
+            .end((err, res) => {
+                expect(res).to.have.status(200);
+                expect(res.text).to.equal('Standard user (invite) registered successfully');
+                done();
+            });
+    });
+
+    it('should register a standard contact with seamless', (done) => {
+        chai.request(app)
+            .post('/register')
+            .send({ usertype: 'standardContact', registrationtype: 'seamless', data: { name: 'Alice' } })
+            .end((err, res) => {
+                expect(res).to.have.status(200);
+                expect(res.text).to.equal('Standard contact (seamless) registered successfully');
+                done();
+            });
+    });
+
+    it('should register a standard contact with simplified', (done) => {
+        chai.request(app)
+            .post('/register')
+            .send({ usertype: 'standardContact', registrationtype: 'simplified', data: { name: 'Bob' } })
+            .end((err, res) => {
+                expect(res).to.have.status(200);
+                expect(res.text).to.equal('Standard contact (simplified) registered successfully');
+                done();
+            });
+    });
+
+    it('should return 400 for missing fields', (done) => {
+        chai.request(app)
+            .post('/register')
+            .send({ usertype: 'standard', registrationtype: 'conversion' })
+            .end((err, res) => {
+                expect(res).to.have.status(400);
+                expect(res.text).to.equal('Usertype, registrationtype, and data are required');
+                done();
+            });
+    });
+
+    it('should return 400 for invalid usertype or registrationtype', (done) => {
+        chai.request(app)
+            .post('/register')
+            .send({ usertype: 'invalidType', registrationtype: 'conversion', data: { name: 'Invalid' } })
+            .end((err, res) => {
+                expect(res).to.have.status(400);
+                expect(res.text).to.equal('Invalid usertype or registrationtype');
+                done();
+            });
+    });
+});
+```
+
+In this example:
+- We use `chai` and `chai-http` to make HTTP requests to our Express app and to perform assertions.
+- We test various scenarios, including valid registrations and error cases.
+
+To run the tests, add the following script to your `package.json`:
+
+```json
+"scripts": {
+    "test": "mocha"
+}
+```
+
+Then, run the tests using:
+
+```bash
+npm test
+```
+
+This setup will help you verify that your registration logic is working correctly and that the data is being handled as expected. Let me know if you need any further assistance!
