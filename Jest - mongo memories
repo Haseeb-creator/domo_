@@ -144,3 +144,96 @@ afterAll(async () => {
 - **Proper Cleanup**: Ensures no dangling connections or processes. 
 
 Let me know if you need further clarification!
+
+
+
+//////////////////////////////////////////////////////////////////////////
+
+
+To ensure your actual MongoDB data remains unchanged during testing, you can use an in-memory MongoDB server. This way, your tests will run against a temporary database that is created and destroyed for each test run. Here's how you can set it up using `mongodb-memory-server`:
+
+1. **Install `mongodb-memory-server`:**
+    ```bash
+    npm install --save-dev mongodb-memory-server
+    ```
+
+2. **Update your test file `app.test.js` to use the in-memory server:**
+    ```javascript
+    const request = require('supertest');
+    const mongoose = require('mongoose');
+    const { MongoMemoryServer } = require('mongodb-memory-server');
+    const app = require('./app');
+    const User = require('./models/user');
+
+    let mongoServer;
+
+    // Start the in-memory MongoDB server before all tests
+    beforeAll(async () => {
+        mongoServer = await MongoMemoryServer.create();
+        const uri = mongoServer.getUri();
+        await mongoose.connect(uri, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+        });
+    });
+
+    // Clean up the test database after each test
+    afterEach(async () => {
+        await User.deleteMany({});
+    });
+
+    // Stop the in-memory MongoDB server and close the connection after all tests
+    afterAll(async () => {
+        await mongoose.connection.dropDatabase();
+        await mongoose.connection.close();
+        await mongoServer.stop();
+    });
+
+    describe('GET /api/ping', () => {
+        it('should respond with pong', async () => {
+            const response = await request(app).get('/api/ping');
+            expect(response.status).toBe(200);
+            expect(response.text).toBe('pong');
+        });
+    });
+
+    describe('POST /api/register', () => {
+        it('should create a new user', async () => {
+            const newUser = {
+                name: 'John Doe',
+                email: 'john@example.com',
+                password: 'password123',
+            };
+
+            const response = await request(app)
+                .post('/api/register')
+                .send(newUser);
+
+            expect(response.status).toBe(201);
+            expect(response.body).toHaveProperty('_id');
+            expect(response.body.name).toBe(newUser.name);
+            expect(response.body.email).toBe(newUser.email);
+        });
+
+        it('should return 400 if user data is invalid', async () => {
+            const invalidUser = {
+                name: '',
+                email: 'invalid-email',
+                password: '123',
+            };
+
+            const response = await request(app)
+                .post('/api/register')
+                .send(invalidUser);
+
+            expect(response.status).toBe(400);
+        });
+    });
+    ```
+
+3. **Run the tests:**
+    ```bash
+    npm test
+    ```
+
+This setup uses `mongodb-memory-server` to create an in-memory MongoDB instance for testing, ensuring that your actual data remains untouched. Let me know if you need any further assistance!
