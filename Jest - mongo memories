@@ -1,0 +1,146 @@
+When writing Jest tests for a Mongoose application, it's important to use a **test database** and ensure no actual data is stored in the main MongoDB database. Additionally, you need to properly handle the server and MongoDB connection teardown.
+
+Here’s a step-by-step guide:
+
+### 1. **Use a Test Database**
+In your test environment, configure Mongoose to connect to a test database, such as an in-memory database like `mongodb-memory-server`. This avoids polluting your actual database.
+
+Install the required package:
+
+```bash
+npm install --save-dev mongodb-memory-server
+```
+
+### 2. **Setup Mongoose with `mongodb-memory-server`**
+Here's how you can configure it:
+
+#### `test/setup.js`
+```javascript
+const { MongoMemoryServer } = require('mongodb-memory-server');
+const mongoose = require('mongoose');
+
+let mongoServer;
+
+module.exports = {
+  // Setup before tests run
+  setup: async () => {
+    mongoServer = await MongoMemoryServer.create();
+    const uri = mongoServer.getUri();
+
+    await mongoose.connect(uri, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+  },
+
+  // Teardown after tests run
+  teardown: async () => {
+    await mongoose.disconnect();
+    await mongoServer.stop();
+  },
+};
+```
+
+#### Update Jest Config
+Tell Jest to use the setup file:
+
+```json
+// jest.config.js
+module.exports = {
+  setupFilesAfterEnv: ['./test/setup.js'],
+};
+```
+
+### 3. **Write Your Jest Tests**
+Now, write the Jest test for your `/register` route. Here’s an example:
+
+#### Test Example
+```javascript
+const request = require('supertest');
+const app = require('../../app'); // Path to your Express app
+const User = require('../../models/User'); // Path to your Mongoose model
+const { setup, teardown } = require('../setup');
+
+beforeAll(async () => {
+  await setup();
+});
+
+afterAll(async () => {
+  await teardown();
+});
+
+describe('POST /register', () => {
+  it('should store user data in the database if conditions are met', async () => {
+    const sampleData = {
+      username: 'testuser',
+      email: 'test@example.com',
+      password: 'password123',
+    };
+
+    const response = await request(app).post('/register').send(sampleData);
+
+    expect(response.status).toBe(201); // Adjust status code based on your logic
+    expect(response.body.message).toBe('User registered successfully');
+
+    // Verify data stored in the database
+    const user = await User.findOne({ email: sampleData.email });
+    expect(user).toBeTruthy();
+    expect(user.username).toBe(sampleData.username);
+  });
+
+  it('should not store invalid data', async () => {
+    const invalidData = { email: 'invalid', password: '123' };
+
+    const response = await request(app).post('/register').send(invalidData);
+
+    expect(response.status).toBe(400); // Adjust based on your validation logic
+    expect(response.body.error).toBe('Invalid input');
+
+    // Ensure no data was stored
+    const user = await User.findOne({ email: invalidData.email });
+    expect(user).toBeNull();
+  });
+});
+```
+
+### 4. **Closing Server and Connections**
+Make sure your app shuts down cleanly after tests. If your app listens to a port using `app.listen`, return the server instance and close it after tests.
+
+#### Modify `app.js`
+Ensure you export the server instance for cleanup:
+
+```javascript
+const express = require('express');
+const mongoose = require('mongoose');
+
+const app = express();
+app.use(express.json());
+
+// Routes here...
+
+if (require.main === module) {
+  const server = app.listen(3000, () => console.log('Server running on port 3000'));
+  module.exports = { app, server };
+} else {
+  module.exports = { app };
+}
+```
+
+#### Test Cleanup for Server
+Close the server in the test cleanup:
+
+```javascript
+const { app, server } = require('../../app');
+
+afterAll(async () => {
+  server.close(); // Close server
+  await mongoose.connection.close(); // Close Mongoose connection
+});
+```
+
+### Key Benefits
+- **No Pollution**: Using `mongodb-memory-server` ensures your real database is untouched.
+- **Isolation**: Each test runs in its own clean environment.
+- **Proper Cleanup**: Ensures no dangling connections or processes. 
+
+Let me know if you need further clarification!
