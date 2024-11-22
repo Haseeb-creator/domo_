@@ -1,0 +1,86 @@
+To write a test case for the controller that stores data using a Mongoose model, you can use Jest along with a library like `mockingoose` to mock the Mongoose model. Here's a step-by-step guide:
+
+### 1. Install Dependencies
+First, ensure you have Jest and Mockingoose installed:
+
+```bash
+npm install --save-dev jest mockingoose
+```
+
+### 2. Create the Test File
+Create a test file for your controller, for example, `userController.test.js`:
+
+```javascript
+// __tests__/userController.test.js
+const mockingoose = require('mockingoose');
+const request = require('supertest');
+const app = require('../app');
+const User = require('../models/User');
+
+describe('POST /api/users', () => {
+  it('should create a new user', async () => {
+    // Arrange
+    const mockUser = {
+      _id: '507f191e810c19729de860ea',
+      name: 'John Doe',
+      email: 'john.doe@example.com',
+      password: 'password123',
+    };
+
+    mockingoose(User).toReturn(mockUser, 'save');
+
+    // Act
+    const response = await request(app)
+      .post('/api/users')
+      .send({
+        name: 'John Doe',
+        email: 'john.doe@example.com',
+        password: 'password123',
+      });
+
+    // Assert
+    expect(response.status).toBe(201);
+    expect(response.body).toHaveProperty('message', 'User created successfully');
+    expect(response.body.user).toMatchObject({
+      name: 'John Doe',
+      email: 'john.doe@example.com',
+    });
+  });
+
+  it('should handle errors', async () => {
+    // Arrange
+    const errorMessage = { message: 'Error creating user' };
+    mockingoose(User).toReturn(new Error(errorMessage.message), 'save');
+
+    // Act
+    const response = await request(app)
+      .post('/api/users')
+      .send({
+        name: 'John Doe',
+        email: 'john.doe@example.com',
+        password: 'password123',
+      });
+
+    // Assert
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty('message', errorMessage.message);
+  });
+});
+```
+
+### Explanation
+- **Mockingoose**: This library is used to mock Mongoose models. It allows you to simulate the behavior of Mongoose methods without needing a real database connection.
+- **Mocking the Save Method**: We use `mockingoose(User).toReturn(mockUser, 'save')` to mock the behavior of the `save` method on the `User` model.
+- **Supertest**: This library is used to simulate HTTP requests to your Express app and verify the responses.
+- **Test Cases**: 
+  - The first test case checks if a new user is created successfully and verifies the response.
+  - The second test case checks how the controller handles errors during user creation.
+
+### 3. Run Your Tests
+You can run your tests using the following command:
+
+```bash
+npm test
+```
+
+This setup ensures that your tests are isolated and do not depend on a real database, making them faster and more reliable. If you have any questions or need further assistance, feel free to ask!
