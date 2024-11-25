@@ -1,0 +1,70 @@
+It sounds like your application is encountering an `uncaughtException` error, which is causing it to crash. This can happen if a validation error isn't properly caught and handled. Here are some steps to help you manage this issue:
+
+1. **Proper Error Handling in Your Controller**:
+   Ensure that your controller catches validation errors and sends an appropriate response. Here's an example:
+
+   ```javascript
+   const mongoose = require('mongoose');
+   const express = require('express');
+   const app = express();
+
+   app.use(express.json());
+
+   const userSchema = new mongoose.Schema({
+     name: { type: String, required: true },
+     email: { type: String, required: true, unique: true }
+   });
+
+   const User = mongoose.model('User', userSchema);
+
+   app.post('/users', async (req, res) => {
+     try {
+       const user = new User(req.body);
+       await user.save();
+       res.status(201).send(user);
+     } catch (error) {
+       if (error instanceof mongoose.Error.ValidationError) {
+         res.status(400).send({ message: error.message, errors: error.errors });
+       } else {
+         res.status(500).send({ message: 'Internal Server Error' });
+       }
+     }
+   });
+
+   app.listen(3000, () => {
+     console.log('Server is running on port 3000');
+   });
+   ```
+
+2. **Handling Uncaught Exceptions**:
+   While it's generally not recommended to rely on `uncaughtException` for handling errors, you can use it as a last resort to log the error and shut down the application gracefully:
+
+   ```javascript
+   process.on('uncaughtException', (err) => {
+     console.error('There was an uncaught error', err);
+     // Perform cleanup and exit the process
+     process.exit(1);
+   });
+   ```
+
+   However, it's better to handle errors at the source and avoid letting them bubble up to this level[1](https://dev.to/mrrishimeena/the-dangers-of-preventing-nodejs-app-crashes-why-uncaughtexception-is-a-last-resort-1mmh).
+
+3. **Check Your Mongoose Schema and Validation**:
+   Ensure that your Mongoose schema is correctly defined and that you're validating the data properly before saving it to the database. This can help prevent validation errors from causing crashes.
+
+4. **Use Middleware for Centralized Error Handling**:
+   Implementing a centralized error-handling middleware can help manage errors more effectively:
+
+   ```javascript
+   app.use((err, req, res, next) => {
+     if (err instanceof mongoose.Error.ValidationError) {
+       res.status(400).send({ message: err.message, errors: err.errors });
+     } else {
+       res.status(500).send({ message: 'Internal Server Error' });
+     }
+   });
+   ```
+
+By following these steps, you should be able to handle validation errors more gracefully and prevent your application from crashing. If you need more specific help, feel free to share your code, and I can take a closer look!
+
+[1](https://dev.to/mrrishimeena/the-dangers-of-preventing-nodejs-app-crashes-why-uncaughtexception-is-a-last-resort-1mmh): [The Dangers of Preventing Node.js App Crashes: Why 'uncaughtException' is a Last Resort](https://dev.to/mrrishimeena/the-dangers-of-preventing-nodejs-app-crashes-why-uncaughtexception-is-a-last-resort-1mmh)
