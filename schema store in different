@@ -1,0 +1,118 @@
+If your schemas are organized in different folders, you can still use Mongoose discriminators to store data from multiple schemas in a single collection. You'll just need to require the schemas from their respective files and set them up accordingly. Here's how you can do it:
+
+1. **Organize Your Schemas in Different Files**:
+   Let's assume you have three schemas in different files.
+
+   - `models/schemaOne.js`
+   - `models/schemaTwo.js`
+   - `models/schemaThree.js`
+
+2. **Define and Export Each Schema**:
+   Each schema file should define and export its schema.
+
+   `models/schemaOne.js`:
+   ```javascript
+   const mongoose = require('mongoose');
+   const Base = require('./base'); // Import the base schema
+
+   const SchemaOne = Base.discriminator('SchemaOne', new mongoose.Schema({
+     field1: { type: String, required: true },
+     field2: { type: Number, required: true }
+   }));
+
+   module.exports = SchemaOne;
+   ```
+
+   `models/schemaTwo.js`:
+   ```javascript
+   const mongoose = require('mongoose');
+   const Base = require('./base'); // Import the base schema
+
+   const SchemaTwo = Base.discriminator('SchemaTwo', new mongoose.Schema({
+     fieldA: { type: String, required: true },
+     fieldB: { type: Boolean, default: false }
+   }));
+
+   module.exports = SchemaTwo;
+   ```
+
+   `models/schemaThree.js`:
+   ```javascript
+   const mongoose = require('mongoose');
+   const Base = require('./base'); // Import the base schema
+
+   const SchemaThree = Base.discriminator('SchemaThree', new mongoose.Schema({
+     fieldX: { type: Date, default: Date.now },
+     fieldY: { type: [String], required: true }
+   }));
+
+   module.exports = SchemaThree;
+   ```
+
+3. **Create a Base Schema**:
+   Define a base schema with a discriminator key in a separate file.
+
+   `models/base.js`:
+   ```javascript
+   const mongoose = require('mongoose');
+
+   const baseOptions = {
+     discriminatorKey: '__type',
+     collection: 'data' // Common collection name
+   };
+
+   const Base = mongoose.model('Base', new mongoose.Schema({}, baseOptions));
+
+   module.exports = Base;
+   ```
+
+4. **Use the Schemas in Your Application**:
+   Import the schemas and use them in your application.
+
+   `app.js`:
+   ```javascript
+   const express = require('express');
+   const mongoose = require('mongoose');
+   const SchemaOne = require('./models/schemaOne');
+   const SchemaTwo = require('./models/schemaTwo');
+   const SchemaThree = require('./models/schemaThree');
+
+   const app = express();
+   app.use(express.json());
+
+   app.post('/schemaOne', async (req, res) => {
+     try {
+       const docOne = new SchemaOne(req.body);
+       await docOne.save();
+       res.status(201).send(docOne);
+     } catch (error) {
+       res.status(400).send({ message: error.message, errors: error.errors });
+     }
+   });
+
+   app.post('/schemaTwo', async (req, res) => {
+     try {
+       const docTwo = new SchemaTwo(req.body);
+       await docTwo.save();
+       res.status(201).send(docTwo);
+     } catch (error) {
+       res.status(400).send({ message: error.message, errors: error.errors });
+     }
+   });
+
+   app.post('/schemaThree', async (req, res) => {
+     try {
+       const docThree = new SchemaThree(req.body);
+       await docThree.save();
+       res.status(201).send(docThree);
+     } catch (error) {
+       res.status(400).send({ message: error.message, errors: error.errors });
+     }
+   });
+
+   app.listen(3000, () => {
+     console.log('Server is running on port 3000');
+   });
+   ```
+
+By organizing your schemas in different files and using discriminators, you can store data from multiple schemas in a single collection while keeping your code modular and maintainable. If you have any further questions or need more specific help, feel free to ask!
