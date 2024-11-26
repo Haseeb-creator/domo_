@@ -116,3 +116,257 @@ If your schemas are organized in different folders, you can still use Mongoose d
    ```
 
 By organizing your schemas in different files and using discriminators, you can store data from multiple schemas in a single collection while keeping your code modular and maintainable. If you have any further questions or need more specific help, feel free to ask!
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////
+
+
+Got it! Let's update the code to include a `registerType` field in the JSON data and ensure that it is saved correctly through the controller. We'll also update the test cases to verify that the `registerType` is being handled properly.
+
+### Updated Mongoose Schema Model (userModel.js)
+Add the `registerType` field to the schema:
+```javascript
+// models/userModel.js
+const mongoose = require('mongoose');
+
+const userSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  age: {
+    type: Number,
+    required: true
+  },
+  registerType: {
+    type: String,
+    enum: ['conversion', 'inviteFlow', 'seamless', 'simplified'],
+    required: true
+  }
+});
+
+const User = mongoose.model('User', userSchema);
+
+module.exports = User;
+```
+
+### Updated Controller (userController.js)
+Update the controller to handle the `registerType` field:
+```javascript
+// controllers/userController.js
+const User = require('../models/userModel');
+
+const addUser = async (req, res) => {
+  try {
+    const { name, email, age, registerType } = req.body;
+
+    // Condition 1: Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: 'User already exists' });
+    }
+
+    // Condition 2: Check if age is valid
+    if (age < 18) {
+      return res.status(400).json({ message: 'User must be at least 18 years old' });
+    }
+
+    // Condition 3: Check if name is provided
+    if (!name) {
+      return res.status(400).json({ message: 'Name is required' });
+    }
+
+    // Condition 4: Check if email is valid (simple regex for example purposes)
+    const emailRegex = /\S+@\S+\.\S+/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: 'Invalid email format' });
+    }
+
+    // Condition 5: Check if registerType is valid
+    const validRegisterTypes = ['conversion', 'inviteFlow', 'seamless', 'simplified'];
+    if (!validRegisterTypes.includes(registerType)) {
+      return res.status(400).json({ message: 'Invalid register type' });
+    }
+
+    // Create and save the new user
+    const newUser = new User({ name, email, age, registerType });
+    await newUser.save();
+
+    res.status(201).json({ message: 'User added successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
+module.exports = { addUser };
+```
+
+### Updated Test Cases (userController.test.js)
+Update the test cases to include the `registerType` field and verify that it is saved correctly:
+```javascript
+// tests/userController.test.js
+const request = require('supertest');
+const express = require('express');
+const mockingoose = require('mockingoose');
+const { addUser } = require('../controllers/userController');
+const User = require('../models/userModel');
+
+const app = express();
+app.use(express.json());
+app.post('/api/register', addUser);
+
+describe('POST /api/register', () => {
+  beforeEach(() => {
+    mockingoose.resetAll();
+  });
+
+  it('should add a new user successfully', async () => {
+    const mockUser = {
+      name: 'John Doe',
+      email: 'john@example.com',
+      age: 30,
+      registerType: 'conversion'
+    };
+
+    mockingoose(User).toReturn(null, 'findOne'); // No existing user
+    mockingoose(User).toReturn(mockUser, 'save'); // Mock save method
+
+    const response = await request(app)
+      .post('/api/register')
+      .send(mockUser);
+
+    expect(response.status).toBe(201);
+    expect(response.body.message).toBe('User added successfully');
+
+    // Verify the values passed to the save method
+    const savedUser = await User.findOne({ email: mockUser.email });
+    expect(savedUser.name).toBe(mockUser.name);
+    expect(savedUser.email).toBe(mockUser.email);
+    expect(savedUser.age).toBe(mockUser.age);
+    expect(savedUser.registerType).toBe(mockUser.registerType);
+  });
+
+  it('should return an error if user already exists', async () => {
+    const mockUser = {
+      name: 'John Doe',
+      email: 'john@example.com',
+      age: 30,
+      registerType: 'conversion'
+    };
+
+    mockingoose(User).toReturn(mockUser, 'findOne'); // Existing user
+
+    const response = await request(app)
+      .post('/api/register')
+      .send(mockUser);
+
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe('User already exists');
+
+    // Verify that save method was not called
+    expect(User.prototype.save).not.toHaveBeenCalled();
+  });
+
+  it('should return an error if age is less than 18', async () => {
+    const mockUser = {
+      name: 'John Doe',
+      email: 'john@example.com',
+      age: 17,
+      registerType: 'conversion'
+    };
+
+    mockingoose(User).toReturn(null, 'findOne'); // No existing user
+
+    const response = await request(app)
+      .post('/api/register')
+      .send(mockUser);
+
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe('User must be at least 18 years old');
+
+    // Verify that save method was not called
+    expect(User.prototype.save).not.toHaveBeenCalled();
+  });
+
+  it('should return an error if name is not provided', async () => {
+    const mockUser = {
+      email: 'john@example.com',
+      age: 30,
+      registerType: 'conversion'
+    };
+
+    mockingoose(User).toReturn(null, 'findOne'); // No existing user
+
+    const response = await request(app)
+      .post('/api/register')
+      .send(mockUser);
+
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe('Name is required');
+
+    // Verify that save method was not called
+    expect(User.prototype.save).not.toHaveBeenCalled();
+  });
+
+  it('should return an error if email format is invalid', async () => {
+    const mockUser = {
+      name: 'John Doe',
+      email: 'johnexample.com',
+      age: 30,
+      registerType: 'conversion'
+    };
+
+    mockingoose(User).toReturn(null, 'findOne'); // No existing user
+
+    const response = await request(app)
+      .post('/api/register')
+      .send(mockUser);
+
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe('Invalid email format');
+
+    // Verify that save method was not called
+    expect(User.prototype.save).not.toHaveBeenCalled();
+  });
+
+  it('should return an error if registerType is invalid', async () => {
+    const mockUser = {
+      name: 'John Doe',
+      email: 'john@example.com',
+      age: 30,
+      registerType: 'invalidType'
+    };
+
+    mockingoose(User).toReturn(null, 'findOne'); // No existing user
+
+    const response = await request(app)
+      .post('/api/register')
+      .send(mockUser);
+
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe('Invalid register type');
+
+    // Verify that save method was not called
+    expect(User.prototype.save).not.toHaveBeenCalled();
+  });
+
+  // Add more test cases for other conditions as needed
+});
+```
+
+### Explanation
+1. **Successful User Addition**: After sending the request, we use `User.findOne` to retrieve the saved user and compare the values, including `registerType`, to ensure they match the input data.
+2. **User Already Exists**: We check that the `save` method was not called if the user already exists.
+3. **Age Validation**: We verify that the `save` method was not called if the age is less than 18.
+4. **Name Validation**: We ensure that the `save` method was not called if the name is not provided.
+5. **Email Format Validation**: We confirm that the `save` method was not called if the email format is invalid.
+6. **Register Type Validation**: We check that the `save` method was not called if the `registerType` is invalid.
+
+By including the `registerType` field in your schema, controller, and test cases, you can ensure that this data is being saved correctly and validated properly. Let me know if you need any further assistance!
