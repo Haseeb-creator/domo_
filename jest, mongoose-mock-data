@@ -208,3 +208,88 @@ npm test
 ```
 
 This setup will test each controller to ensure they handle saving data and errors correctly. Let me know if you need any further assistance!
+
+
+////////////////////////////////////////////////////
+
+
+When using `next(error)` in your controller, it indicates that you're using middleware to handle errors. In your tests, you need to mock the `next` function to ensure it behaves as expected. Here's how you can adjust your test files to include a mock `next` function.
+
+### Updated Test Example
+
+Let's update one of the test files to include a mock `next` function. I'll use the `conversionController.test.js` as an example.
+
+**__tests__/conversionController.test.js**
+```javascript
+const mongoose = require('mongoose');
+const { handleConversion } = require('../controllers/conversionController');
+const Conversion = require('../models/conversionModel');
+
+jest.mock('../models/conversionModel');
+
+describe('Conversion Controller', () => {
+  it('should save conversion data and send success message', async () => {
+    const req = { body: { /* mock data */ } };
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      send: jest.fn(),
+    };
+    const next = jest.fn();
+
+    Conversion.mockImplementation(() => ({
+      save: jest.fn().mockResolvedValueOnce({}),
+    }));
+
+    await handleConversion(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.send).toHaveBeenCalledWith({ message: 'Conversion data saved successfully' });
+  });
+
+  it('should handle errors', async () => {
+    const req = { body: { /* mock data */ } };
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      send: jest.fn(),
+    };
+    const next = jest.fn();
+
+    Conversion.mockImplementation(() => ({
+      save: jest.fn().mockRejectedValueOnce(new Error('Save failed')),
+    }));
+
+    await handleConversion(req, res, next);
+
+    expect(next).toHaveBeenCalledWith(new Error('Save failed'));
+  });
+});
+```
+
+### Updated Controller Example
+
+Ensure your controller is set up to use `next` for error handling.
+
+**conversionController.js**
+```javascript
+const Conversion = require('../models/conversionModel');
+
+exports.handleConversion = async (req, res, next) => {
+  try {
+    const conversionData = new Conversion(req.body);
+    await conversionData.save();
+    res.status(201).send({ message: 'Conversion data saved successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+```
+
+### Running the Tests
+
+With these changes, your tests should correctly mock the `next` function and handle the error cases as expected. Run your tests again to verify:
+
+```bash
+npm test
+```
+
+This approach ensures that your error handling is properly tested and that the `next` function is correctly mocked in your unit tests. Let me know if you need any further assistance!
