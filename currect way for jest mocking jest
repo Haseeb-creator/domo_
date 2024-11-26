@@ -1,0 +1,185 @@
+You can organize your tests in a way that makes them clear and maintainable. Using separate `describe` blocks for each flow (conversion, invite, seamless, simplified) can help keep your tests organized and easier to read. Here's an example of how you can structure your tests with separate `describe` blocks:
+
+### Example Test Structure
+
+**__tests__/controllers.test.js**
+```javascript
+const mongoose = require('mongoose');
+const { handleConversion } = require('../controllers/conversionController');
+const { handleInvite } = require('../controllers/inviteController');
+const { handleSeamless } = require('../controllers/seamlessController');
+const { handleSimplified } = require('../controllers/simplifiedController');
+const Conversion = require('../models/conversionModel');
+const Invite = require('../models/inviteModel');
+const Seamless = require('../models/seamlessModel');
+const Simplified = require('../models/simplifiedModel');
+
+jest.mock('../models/conversionModel');
+jest.mock('../models/inviteModel');
+jest.mock('../models/seamlessModel');
+jest.mock('../models/simplifiedModel');
+
+describe('Controllers', () => {
+  afterEach(() => {
+    jest.clearAllMocks(); // Clear all mocks after each test
+  });
+
+  describe('Conversion Controller', () => {
+    it('should save conversion data and send success message', async () => {
+      const req = { body: { /* mock data */ } };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn(),
+      };
+      const next = jest.fn();
+
+      Conversion.mockImplementation(() => ({
+        save: jest.fn().mockResolvedValueOnce({}),
+      }));
+
+      await handleConversion(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ status: 'Success', message: 'Conversion data saved successfully' });
+    });
+
+    it('should handle errors', async () => {
+      const req = { body: { /* mock data */ } };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn(),
+      };
+      const next = jest.fn();
+
+      Conversion.mockImplementation(() => ({
+        save: jest.fn().mockRejectedValueOnce(new Error('Save failed')),
+      }));
+
+      await handleConversion(req, res, next);
+
+      expect(next).toHaveBeenCalledWith(expect.any(Error));
+    });
+  });
+
+  describe('Invite Controller', () => {
+    it('should save invite data and send success message', async () => {
+      const req = { body: { /* mock data */ } };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn(),
+      };
+      const next = jest.fn();
+
+      Invite.mockImplementation(() => ({
+        save: jest.fn().mockResolvedValueOnce({}),
+      }));
+
+      await handleInvite(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ status: 'Success', message: 'Invite data saved successfully' });
+    });
+
+    it('should handle errors', async () => {
+      const req = { body: { /* mock data */ } };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn(),
+      };
+      const next = jest.fn();
+
+      Invite.mockImplementation(() => ({
+        save: jest.fn().mockRejectedValueOnce(new Error('Save failed')),
+      }));
+
+      await handleInvite(req, res, next);
+
+      expect(next).toHaveBeenCalledWith(expect.any(Error));
+    });
+  });
+
+  describe('Seamless Controller', () => {
+    it('should save seamless data and send success message', async () => {
+      const req = { body: { /* mock data */ } };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn(),
+      };
+      const next = jest.fn();
+
+      Seamless.mockImplementation(() => ({
+        save: jest.fn().mockResolvedValueOnce({}),
+      }));
+
+      await handleSeamless(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ status: 'Success', message: 'Seamless data saved successfully' });
+    });
+
+    it('should handle errors', async () => {
+      const req = { body: { /* mock data */ } };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn(),
+      };
+      const next = jest.fn();
+
+      Seamless.mockImplementation(() => ({
+        save: jest.fn().mockRejectedValueOnce(new Error('Save failed')),
+      }));
+
+      await handleSeamless(req, res, next);
+
+      expect(next).toHaveBeenCalledWith(expect.any(Error));
+    });
+  });
+
+  describe('Simplified Controller', () => {
+    it('should save simplified data and send success message', async () => {
+      const req = { body: { /* mock data */ } };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn(),
+      };
+      const next = jest.fn();
+
+      Simplified.mockImplementation(() => ({
+        save: jest.fn().mockResolvedValueOnce({}),
+      }));
+
+      await handleSimplified(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ status: 'Success', message: 'Simplified data saved successfully' });
+    });
+
+    it('should handle errors', async () => {
+      const req = { body: { /* mock data */ } };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn(),
+      };
+      const next = jest.fn();
+
+      Simplified.mockImplementation(() => ({
+        save: jest.fn().mockRejectedValueOnce(new Error('Save failed')),
+      }));
+
+      await handleSimplified(req, res, next);
+
+      expect(next).toHaveBeenCalledWith(expect.any(Error));
+    });
+  });
+});
+```
+
+### Running the Tests
+
+With this structure, each controller's tests are grouped together, making it easier to manage and understand. Run your tests again to verify:
+
+```bash
+npm test
+```
+
+This approach ensures your tests are well-organized and maintainable. Let me know if you need any further assistance!
