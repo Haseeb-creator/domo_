@@ -1,0 +1,210 @@
+Sure! Here's how you can write unit tests for the controllers using Jest. We'll mock the Mongoose models to avoid actual database operations during testing.
+
+### Step 1: Install Jest and Mongoose Mocking Library
+First, install Jest and `jest-mongoose-mock` (or any other mocking library you prefer).
+
+```bash
+npm install --save-dev jest jest-mongoose-mock
+```
+
+### Step 2: Create Test Files
+Create test files for each controller in a `__tests__` folder.
+
+**__tests__/conversionController.test.js**
+```javascript
+const mongoose = require('mongoose');
+const { handleConversion } = require('../controllers/conversionController');
+const Conversion = require('../models/conversionModel');
+
+jest.mock('../models/conversionModel');
+
+describe('Conversion Controller', () => {
+  it('should save conversion data and send success message', async () => {
+    const req = { body: { /* mock data */ } };
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      send: jest.fn(),
+    };
+
+    Conversion.mockImplementation(() => ({
+      save: jest.fn().mockResolvedValueOnce({}),
+    }));
+
+    await handleConversion(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.send).toHaveBeenCalledWith({ message: 'Conversion data saved successfully' });
+  });
+
+  it('should handle errors', async () => {
+    const req = { body: { /* mock data */ } };
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      send: jest.fn(),
+    };
+
+    Conversion.mockImplementation(() => ({
+      save: jest.fn().mockRejectedValueOnce(new Error('Save failed')),
+    }));
+
+    await handleConversion(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.send).toHaveBeenCalledWith(new Error('Save failed'));
+  });
+});
+```
+
+**__tests__/inviteController.test.js**
+```javascript
+const mongoose = require('mongoose');
+const { handleInvite } = require('../controllers/inviteController');
+const Invite = require('../models/inviteModel');
+
+jest.mock('../models/inviteModel');
+
+describe('Invite Controller', () => {
+  it('should save invite data and send success message', async () => {
+    const req = { body: { /* mock data */ } };
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      send: jest.fn(),
+    };
+
+    Invite.mockImplementation(() => ({
+      save: jest.fn().mockResolvedValueOnce({}),
+    }));
+
+    await handleInvite(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.send).toHaveBeenCalledWith({ message: 'Invite data saved successfully' });
+  });
+
+  it('should handle errors', async () => {
+    const req = { body: { /* mock data */ } };
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      send: jest.fn(),
+    };
+
+    Invite.mockImplementation(() => ({
+      save: jest.fn().mockRejectedValueOnce(new Error('Save failed')),
+    }));
+
+    await handleInvite(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.send).toHaveBeenCalledWith(new Error('Save failed'));
+  });
+});
+```
+
+**__tests__/seamlessController.test.js**
+```javascript
+const mongoose = require('mongoose');
+const { handleSeamless } = require('../controllers/seamlessController');
+const Seamless = require('../models/seamlessModel');
+
+jest.mock('../models/seamlessModel');
+
+describe('Seamless Controller', () => {
+  it('should save seamless data and send success message', async () => {
+    const req = { body: { /* mock data */ } };
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      send: jest.fn(),
+    };
+
+    Seamless.mockImplementation(() => ({
+      save: jest.fn().mockResolvedValueOnce({}),
+    }));
+
+    await handleSeamless(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.send).toHaveBeenCalledWith({ message: 'Seamless data saved successfully' });
+  });
+
+  it('should handle errors', async () => {
+    const req = { body: { /* mock data */ } };
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      send: jest.fn(),
+    };
+
+    Seamless.mockImplementation(() => ({
+      save: jest.fn().mockRejectedValueOnce(new Error('Save failed')),
+    }));
+
+    await handleSeamless(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.send).toHaveBeenCalledWith(new Error('Save failed'));
+  });
+});
+```
+
+**__tests__/simplifiedController.test.js**
+```javascript
+const mongoose = require('mongoose');
+const { handleSimplified } = require('../controllers/simplifiedController');
+const Simplified = require('../models/simplifiedModel');
+
+jest.mock('../models/simplifiedModel');
+
+describe('Simplified Controller', () => {
+  it('should save simplified data and send success message', async () => {
+    const req = { body: { /* mock data */ } };
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      send: jest.fn(),
+    };
+
+    Simplified.mockImplementation(() => ({
+      save: jest.fn().mockResolvedValueOnce({}),
+    }));
+
+    await handleSimplified(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.send).toHaveBeenCalledWith({ message: 'Simplified data saved successfully' });
+  });
+
+  it('should handle errors', async () => {
+    const req = { body: { /* mock data */ } };
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      send: jest.fn(),
+    };
+
+    Simplified.mockImplementation(() => ({
+      save: jest.fn().mockRejectedValueOnce(new Error('Save failed')),
+    }));
+
+    await handleSimplified(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.send).toHaveBeenCalledWith(new Error('Save failed'));
+  });
+});
+```
+
+### Step 3: Run the Tests
+Add a test script to your `package.json` and run the tests.
+
+**package.json**
+```json
+{
+  "scripts": {
+    "test": "jest"
+  }
+}
+```
+
+Run the tests:
+```bash
+npm test
+```
+
+This setup will test each controller to ensure they handle saving data and errors correctly. Let me know if you need any further assistance!
