@@ -1,0 +1,165 @@
+It seems like there might be an issue with how the mock functions are being used. Let's try a different approach to ensure that the `save` method is being called with the correct data. Instead of directly checking the saved user, we'll use Jest's mock functions to verify the arguments passed to the `save` method.
+
+### Adjusted Test Case with Jest Mock Functions
+We'll use Jest's mock functions to check the arguments passed to the `save` method.
+
+1. **Ensure `User.prototype.save` is a mock function**:
+   ```javascript
+   // tests/userController.test.js
+   const request = require('supertest');
+   const express = require('express');
+   const mockingoose = require('mockingoose');
+   const { addUser } = require('../controllers/userController');
+   const User = require('../models/userModel');
+
+   const app = express();
+   app.use(express.json());
+   app.post('/api/register', addUser);
+
+   describe('POST /api/register', () => {
+     beforeEach(() => {
+       mockingoose.resetAll();
+       jest.clearAllMocks();
+     });
+
+     it('should add a new user successfully', async () => {
+       const mockUser = {
+         name: 'John Doe',
+         email: 'john@example.com',
+         age: 30,
+         registerType: 'conversion'
+       };
+
+       mockingoose(User).toReturn(null, 'findOne'); // No existing user
+       User.prototype.save = jest.fn().mockResolvedValue(mockUser); // Mock save method
+
+       const response = await request(app)
+         .post('/api/register')
+         .send(mockUser);
+
+       expect(response.status).toBe(201);
+       expect(response.body.message).toBe('User added successfully');
+
+       // Verify the values passed to the save method
+       expect(User.prototype.save).toHaveBeenCalled();
+       const savedUser = User.prototype.save.mock.calls[0][0];
+       expect(savedUser.name).toBe(mockUser.name);
+       expect(savedUser.email).toBe(mockUser.email);
+       expect(savedUser.age).toBe(mockUser.age);
+       expect(savedUser.registerType).toBe(mockUser.registerType);
+     });
+
+     it('should return an error if user already exists', async () => {
+       const mockUser = {
+         name: 'John Doe',
+         email: 'john@example.com',
+         age: 30,
+         registerType: 'conversion'
+       };
+
+       mockingoose(User).toReturn(mockUser, 'findOne'); // Existing user
+
+       const response = await request(app)
+         .post('/api/register')
+         .send(mockUser);
+
+       expect(response.status).toBe(400);
+       expect(response.body.message).toBe('User already exists');
+
+       // Verify that save method was not called
+       expect(User.prototype.save).not.toHaveBeenCalled();
+     });
+
+     it('should return an error if age is less than 18', async () => {
+       const mockUser = {
+         name: 'John Doe',
+         email: 'john@example.com',
+         age: 17,
+         registerType: 'conversion'
+       };
+
+       mockingoose(User).toReturn(null, 'findOne'); // No existing user
+
+       const response = await request(app)
+         .post('/api/register')
+         .send(mockUser);
+
+       expect(response.status).toBe(400);
+       expect(response.body.message).toBe('User must be at least 18 years old');
+
+       // Verify that save method was not called
+       expect(User.prototype.save).not.toHaveBeenCalled();
+     });
+
+     it('should return an error if name is not provided', async () => {
+       const mockUser = {
+         email: 'john@example.com',
+         age: 30,
+         registerType: 'conversion'
+       };
+
+       mockingoose(User).toReturn(null, 'findOne'); // No existing user
+
+       const response = await request(app)
+         .post('/api/register')
+         .send(mockUser);
+
+       expect(response.status).toBe(400);
+       expect(response.body.message).toBe('Name is required');
+
+       // Verify that save method was not called
+       expect(User.prototype.save).not.toHaveBeenCalled();
+     });
+
+     it('should return an error if email format is invalid', async () => {
+       const mockUser = {
+         name: 'John Doe',
+         email: 'johnexample.com',
+         age: 30,
+         registerType: 'conversion'
+       };
+
+       mockingoose(User).toReturn(null, 'findOne'); // No existing user
+
+       const response = await request(app)
+         .post('/api/register')
+         .send(mockUser);
+
+       expect(response.status).toBe(400);
+       expect(response.body.message).toBe('Invalid email format');
+
+       // Verify that save method was not called
+       expect(User.prototype.save).not.toHaveBeenCalled();
+     });
+
+     it('should return an error if registerType is invalid', async () => {
+       const mockUser = {
+         name: 'John Doe',
+         email: 'john@example.com',
+         age: 30,
+         registerType: 'invalidType'
+       };
+
+       mockingoose(User).toReturn(null, 'findOne'); // No existing user
+
+       const response = await request(app)
+         .post('/api/register')
+         .send(mockUser);
+
+       expect(response.status).toBe(400);
+       expect(response.body.message).toBe('Invalid register type');
+
+       // Verify that save method was not called
+       expect(User.prototype.save).not.toHaveBeenCalled();
+     });
+
+     // Add more test cases for other conditions as needed
+   });
+   ```
+
+### Explanation
+1. **Mocking the `save` Method**: We explicitly mock the `save` method using `jest.fn()` and ensure it resolves with the `mockUser` data.
+2. **Verifying the `save` Method Call**: We use `expect(User.prototype.save).toHaveBeenCalled()` to verify that the `save` method was called.
+3. **Checking the Saved Data**: We use `User.prototype.save.mock.calls[0][0]` to access the arguments passed to the `save` method and verify that they match the expected values.
+
+This approach ensures that the `save` method is correctly mocked and that the data being saved is verified properly. Let me know if you need any further assistance!
