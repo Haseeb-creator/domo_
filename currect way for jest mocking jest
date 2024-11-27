@@ -322,3 +322,102 @@ npm test
 ```
 
 This setup ensures that your model validations are properly tested and that your controllers handle validation errors correctly. Let me know if you need any further assistance!
+
+
+
+
+//////////////////////////////////////////////////////////////
+
+
+It looks like the issue might be with how the validation error is being mocked and handled. Let's ensure that the validation error is correctly simulated and that the controller handles it as expected.
+
+### Updated Test for Validation Errors
+
+Here's an updated version of the test to ensure it correctly handles validation errors:
+
+**__tests__/conversionController.test.js**
+```javascript
+const mongoose = require('mongoose');
+const { handleConversion } = require('../controllers/conversionController');
+const Conversion = require('../models/conversionModel');
+
+jest.mock('../models/conversionModel');
+
+describe('Conversion Controller', () => {
+  afterEach(() => {
+    jest.clearAllMocks(); // Clear all mocks after each test
+  });
+
+  it('should save conversion data and send success message', async () => {
+    const req = { body: { field1: 'valid data', field2: 10 } };
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
+    const next = jest.fn();
+
+    Conversion.mockImplementation(() => ({
+      save: jest.fn().mockResolvedValueOnce({}),
+    }));
+
+    await handleConversion(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({ status: 'Success', message: 'Conversion data saved successfully' });
+  });
+
+  it('should handle validation errors', async () => {
+    const req = { body: { field1: 'short', field2: 0 } }; // Invalid data
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
+    const next = jest.fn();
+
+    const validationError = new mongoose.Error.ValidationError(null);
+    validationError.addError('field1', new mongoose.Error.ValidatorError({ message: 'Field1 must be at least 5 characters long' }));
+    validationError.addError('field2', new mongoose.Error.ValidatorError({ message: 'Field2 must be at least 1' }));
+
+    Conversion.mockImplementation(() => ({
+      save: jest.fn().mockRejectedValueOnce(validationError),
+    }));
+
+    await handleConversion(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ status: 'Error', message: 'Field1 must be at least 5 characters long. Field2 must be at least 1.' });
+  });
+
+  it('should handle other errors', async () => {
+    const req = { body: { field1: 'valid data', field2: 10 } };
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
+    const next = jest.fn();
+
+    Conversion.mockImplementation(() => ({
+      save: jest.fn().mockRejectedValueOnce(new Error('Save failed')),
+    }));
+
+    await handleConversion(req, res, next);
+
+    expect(next).toHaveBeenCalledWith(expect.any(Error));
+  });
+});
+```
+
+### Explanation
+
+1. **Mocking Validation Error**: The validation error is created using `mongoose.Error.ValidationError` and `mongoose.Error.ValidatorError` to simulate the actual validation error structure.
+2. **Handling Validation Error**: The controller checks if the error is a validation error and responds with a 400 status and the error message.
+
+### Running the Tests
+
+With these changes, your tests should now correctly handle validation errors. Run your tests again to verify:
+
+```bash
+npm test
+```
+
+This should resolve the issue and ensure that your validation errors are properly tested. Let me know if you need any further assistance!
