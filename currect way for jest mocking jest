@@ -446,3 +446,38 @@ it('should handle schema validation errors', async () => {
   expect(res.status).toHaveBeenCalledWith(400);
   expect(res.json).toHaveBeenCalledWith({ status: 'Error', message: 'Field1 is invalid. Field2 must be a positive number.' });
 });
+
+
+///////////////////////////////////////////////////////////////////////
+
+it('should handle schema validation errors', async () => {
+  const req = { body: { loginId: '' } }; // Invalid data
+  const res = {
+    status: jest.fn().mockReturnThis(),
+    json: jest.fn(),
+  };
+  const next = jest.fn();
+
+  const schemaValidationError = new mongoose.Error.ValidationError(null);
+  schemaValidationError.addError('loginId', new mongoose.Error.ValidatorError({ message: 'loginId is required' }));
+
+  Conversion.mockImplementation(() => ({
+    save: jest.fn().mockRejectedValueOnce(schemaValidationError),
+  }));
+
+  await handleConversion(req, res, next);
+
+  // Simulate the error-handling middleware
+  const error = next.mock.calls[0][0];
+  expect(error).toBeInstanceOf(mongoose.Error.ValidationError);
+  expect(error.message).toBe('conversion schema invalid: loginId is required');
+
+  // Simulate the response from the error-handling middleware
+  res.status(error.status || 400).json({
+    status: 'fail',
+    message: error.message,
+  });
+
+  expect(res.status).toHaveBeenCalledWith(400);
+  expect(res.json).toHaveBeenCalledWith({ status: 'fail', message: 'conversion schema invalid: loginId is required' });
+});
