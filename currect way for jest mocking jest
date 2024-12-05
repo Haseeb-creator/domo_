@@ -421,3 +421,28 @@ npm test
 ```
 
 This should resolve the issue and ensure that your validation errors are properly tested. Let me know if you need any further assistance!
+
+
+/////////////////////////////////////////////////////////////////
+
+it('should handle schema validation errors', async () => {
+  const req = { body: { field1: 'invalid', field2: -1 } }; // Invalid data
+  const res = {
+    status: jest.fn().mockReturnThis(),
+    json: jest.fn(),
+  };
+  const next = jest.fn();
+
+  const schemaValidationError = new mongoose.Error.ValidationError(null);
+  schemaValidationError.addError('field1', new mongoose.Error.ValidatorError({ message: 'Field1 is invalid' }));
+  schemaValidationError.addError('field2', new mongoose.Error.ValidatorError({ message: 'Field2 must be a positive number' }));
+
+  Conversion.mockImplementation(() => ({
+    save: jest.fn().mockRejectedValueOnce(schemaValidationError),
+  }));
+
+  await handleConversion(req, res, next);
+
+  expect(res.status).toHaveBeenCalledWith(400);
+  expect(res.json).toHaveBeenCalledWith({ status: 'Error', message: 'Field1 is invalid. Field2 must be a positive number.' });
+});
