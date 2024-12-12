@@ -1,0 +1,50 @@
+Great! Here's an updated overview including the tech stack:
+
+### **Overview**
+This application is designed to capture and analyze user interaction metrics, providing valuable insights into user behavior. It tracks key events such as successful logins, registrations, and link clicks. This data helps in understanding user engagement and improving the overall user experience.
+
+### **Key Features**
+1. **User Authentication Metrics**:
+   - **Successful Logins**: Tracks when users successfully log in, including timestamps and user IDs.
+   - **Failed Login Attempts**: Monitors failed login attempts to identify potential security issues.
+
+2. **Registration Metrics**:
+   - **New User Registrations**: Captures data on new user sign-ups, including registration time and user details.
+   - **Verification Status**: Tracks whether users have verified their email addresses or phone numbers.
+
+3. **User Interaction Metrics**:
+   - **Link Clicks**: Records the types of links users are clicking on, including the URL and click timestamps.
+   - **Page Views**: Monitors which pages are being viewed the most and the duration of each visit.
+
+4. **Event Tracking**:
+   - **Custom Events**: Allows tracking of custom events specific to your application, such as button clicks, form submissions, etc.
+
+5. **Data Visualization**:
+   - **Dashboards**: Provides visual dashboards to display metrics in an easy-to-understand format.
+   - **Reports**: Generates detailed reports on user interactions and engagement.
+
+6. **Alerts and Notifications**:
+   - **Real-time Alerts**: Sends notifications for significant events, such as spikes in failed login attempts or high traffic on specific pages.
+
+### **Tech Stack**
+- **Express**: A fast, unopinionated, minimalist web framework for Node.js, used to build the API endpoints and handle routing.
+- **Mongoose**: An ODM (Object Data Modeling) library for MongoDB and Node.js, used to manage data relationships and schema validation.
+- **Node.js**: A JavaScript runtime built on Chrome's V8 JavaScript engine, used to run the server-side code.
+- **Node-logger**: A logging library for Node.js, used to stack and manage logs efficiently.
+
+### **Benefits**
+- **Improved User Experience**: By understanding user behavior, you can make informed decisions to enhance the user experience.
+- **Security Monitoring**: Helps in identifying and responding to potential security threats.
+- **Data-Driven Decisions**: Empowers your team to make data-driven decisions based on user interaction metrics.
+
+Feel free to add more specific details or ask if you need further assistance!
+
+
+
+### **Tech Stack Highlights**
+- **Express**: Fast, minimalist web framework for building API endpoints and handling routing.
+- **Mongoose**: ODM library for MongoDB, managing data relationships and schema validation.
+- **Node.js**: JavaScript runtime for executing server-side code.
+- **Node-logger**: Logging library for efficient log management.
+
+Let me know if you need more details on any of these!
