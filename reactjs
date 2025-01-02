@@ -1,0 +1,37 @@
+// Online C compiler to run C program online
+#include <stdio.h>
+
+const headerFooterHoc = (WrappedComponent) => {
+  return class extends react.Component {
+    constructor(props){
+super(props)
+{
+this.state={
+dedaultHeader = header.menu
+}
+this.updatePolicies = this.updatepolices.bind(this)
+}
+}
+componentDidMount() {
+//calling Api's promise.all 
+some conditional logics
+}
+updatePolices(polices){some conditional logics}
+
+isHeaderNavorError(){
+    some logics
+}
+
+render() {
+    {propsFromAppCom} = this.props;
+    {header, footer, banner} = this.state; 
+      return (
+        <div>
+          <commenMenu {...this.state}{...propsFromAppCom} />
+          <WrappedComponent {...this.props}{...this.state}updatepolicies ={this.updatePolicies} />
+          <footer {...propsFromAppCom}{...this.state} bannerMessage={banner} menulist={footer}/>
+        </div>
+      );
+    }
+  };
+};
