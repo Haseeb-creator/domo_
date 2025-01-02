@@ -7,12 +7,18 @@ const headerFooterHoc = (WrappedComponent) => {
 super(props)
 {
 this.state={
-dedaultHeader = header.menu
+    isShowingMenu = this.isHeaderNavorError();
+    showBackButton = props.headerType === 'transaction'
+    headerMenu = defaultHeader.header.menu
+    footerMenu = defaultFooter.footer
+    utiliesMenu = defaultHeader.header.uitilities
+    primenumAuditUrl = null
 }
 this.updatePolicies = this.updatepolices.bind(this)
 }
 }
 componentDidMount() {
+    const Stateobject = {...this.state}
 //calling Api's promise.all 
 some conditional logics
 }
