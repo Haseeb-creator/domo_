@@ -71,3 +71,149 @@ render() {
     }
   };
 };
+
+
+
+Here's the conversion of your class-based component to a functional component using React hooks:
+
+### Class-Based Component
+```javascript
+const headerFooterHoc = (WrappedComponent) => {
+  return class extends React.Component {
+    constructor(props) {
+      super(props);
+      this.state = {
+        isShowingMenu: this.isHeaderNavorError(),
+        showBackButton: props.headerType === 'transaction',
+        headerMenu: defaultHeader.header.menu,
+        footerMenu: defaultFooter.footer,
+        utiliesMenu: defaultHeader.header.uitilities,
+        primenumAuditUrl: null,
+        anyNondelivery: null,
+        bannerMsgResponse: null,
+      };
+      this.updatePolicies = this.updatePolicies.bind(this);
+    }
+
+    componentDidMount() {
+      const Stateobject = { ...this.state };
+      const p1 = getCommon()
+        .then(data => Promise.resolve(data))
+        .catch(error => Promise.resolve(error));
+      const p2 = getCommonmenu('Gopaperless')
+        .then(data => Promise.resolve(data))
+        .catch(error => Promise.resolve(error));
+      const p3 = getCommonmenu('BannerMessage')
+        .then(data => Promise.resolve(data))
+        .catch(error => Promise.resolve(error));
+      Promise.all([p1, p2, p3])
+        .then(result => {
+          const res = result[0] || undefined;
+          const preRes = result[1] || undefined;
+          Stateobject.bannerMsgResponse = result[2] || undefined;
+
+          if (res && res.header) {
+            Stateobject.headerMenu = res.header.mainMenu;
+            Stateobject.utiliesMenu = res.header.utiliesMenu;
+          }
+
+          this.setState(Stateobject);
+        })
+        .catch(error => {
+          Stateobject.anyNondelivery = false;
+          this.setState(Stateobject);
+        });
+    }
+
+    updatePolicies(policies) {
+      // some conditional logics
+    }
+
+    isHeaderNavorError() {
+      // some logics
+    }
+
+    render() {
+      const { propsFromAppCom } = this.props;
+      const { header, footer, banner } = this.state;
+      return (
+        <div>
+          <commenMenu {...this.state} {...propsFromAppCom} />
+          <WrappedComponent {...this.props} {...this.state} updatePolicies={this.updatePolicies} />
+          <footer {...propsFromAppCom} {...this.state} bannerMessage={banner} menulist={footer} />
+        </div>
+      );
+    }
+  };
+};
+```
+
+### Functional Component
+```javascript
+import React, { useState, useEffect } from 'react';
+
+const headerFooterHoc = (WrappedComponent) => {
+  return (props) => {
+    const [state, setState] = useState({
+      isShowingMenu: isHeaderNavorError(),
+      showBackButton: props.headerType === 'transaction',
+      headerMenu: defaultHeader.header.menu,
+      footerMenu: defaultFooter.footer,
+      utiliesMenu: defaultHeader.header.uitilities,
+      primenumAuditUrl: null,
+      anyNondelivery: null,
+      bannerMsgResponse: null,
+    });
+
+    useEffect(() => {
+      const Stateobject = { ...state };
+      const p1 = getCommon()
+        .then(data => Promise.resolve(data))
+        .catch(error => Promise.resolve(error));
+      const p2 = getCommonmenu('Gopaperless')
+        .then(data => Promise.resolve(data))
+        .catch(error => Promise.resolve(error));
+      const p3 = getCommonmenu('BannerMessage')
+        .then(data => Promise.resolve(data))
+        .catch(error => Promise.resolve(error));
+      Promise.all([p1, p2, p3])
+        .then(result => {
+          const res = result[0] || undefined;
+          const preRes = result[1] || undefined;
+          Stateobject.bannerMsgResponse = result[2] || undefined;
+
+          if (res && res.header) {
+            Stateobject.headerMenu = res.header.mainMenu;
+            Stateobject.utiliesMenu = res.header.utiliesMenu;
+          }
+
+          setState(Stateobject);
+        })
+        .catch(error => {
+          Stateobject.anyNondelivery = false;
+          setState(Stateobject);
+        });
+    }, []);
+
+    const updatePolicies = (policies) => {
+      // some conditional logics
+    };
+
+    const isHeaderNavorError = () => {
+      // some logics
+    };
+
+    const { propsFromAppCom } = props;
+    const { header, footer, banner } = state;
+    return (
+      <div>
+        <commenMenu {...state} {...propsFromAppCom} />
+        <WrappedComponent {...props} {...state} updatePolicies={updatePolicies} />
+        <footer {...propsFromAppCom} {...state} bannerMessage={banner} menulist={footer} />
+      </div>
+    );
+  };
+};
+```
+
+Feel free to ask if you need any further modifications or explanations!
