@@ -13,15 +13,45 @@ this.state={
     footerMenu = defaultFooter.footer
     utiliesMenu = defaultHeader.header.uitilities
     primenumAuditUrl = null
+    anyNondelivery = null
+    bannerMsgResponse = null 
 }
 this.updatePolicies = this.updatepolices.bind(this)
 }
 }
 componentDidMount() {
     const Stateobject = {...this.state}
-//calling Api's promise.all 
-some conditional logics
+cosnt p1 = getCommon()
+.then(data => promise.resolve(data))
+.catch(error => promise.resolve(error))
+cosnt p2 = getCommonmenu('Gopaperless')
+.then(data => promise.resolve(data))
+.catch(error => promise.resolve(error))
+cosnt p3 = getCommonmenu('BannerMessage')
+.then(data => promise.resolve(data))
+.catch(error => promise.resolve(error))
+promise.all([p1,p2,p3])
+.then(result => {
+const res = result[0] || undefined
+const preRes = result[1] || undefined
+Stateobject.bannerMsgResponse = result[3] || undefined
+
+if (res & res.header){
+Stateobject.headerMenu = res.header.mainMenu
+
+Stateobject.utiliesMenu = res.header.utiliesMenu
+
 }
+
+this.setState(Stateobject)
+})
+.catch(error = > {
+Stateobject.anyNondelivery = false;
+this.setState(Stateobject)
+})
+
+}
+
 updatePolices(polices){some conditional logics}
 
 isHeaderNavorError(){
