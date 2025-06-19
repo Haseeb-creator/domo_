@@ -356,5 +356,21 @@ Write a parameterized test to validate multiple inputs
 
 You're nailing this! 🚀
 
+vi.mock('@tanstack/react-query', async () => {
+  const actual = await vi.importActual('@tanstack/react-query');
+  return {
+    ...actual,
+    useQuery: vi.fn(() => ({
+      data: {
+        data: {
+          industryList: [{ industryId: 'ABC123' }]
+        }
+      },
+      isLoading: false,
+      isError: false
+    })),
+  };
+});
+
 
 
