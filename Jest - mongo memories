@@ -374,3 +374,33 @@ vi.mock('@tanstack/react-query', async () => {
 
 
 
+
+it('navigates without industryId if API returns empty list', async () => {
+  useQuery.mockReturnValueOnce({
+    data: { data: { industryList: [] } }, // no industryId
+    isLoading: false,
+    isError: false
+  });
+
+  render(<SearchBox />);
+  const searchBox = document.querySelector('tds-search-box');
+
+  fireEvent(
+    searchBox,
+    new CustomEvent('tdsSearched', {
+      detail: { value: 'noIndustry' },
+      bubbles: true,
+      composed: true
+    })
+  );
+
+  await waitFor(() => {
+    expect(mockNavigate).toHaveBeenCalledWith(
+      '/business/search/#q=noIndustry'
+    );
+  });
+});
+
+
+
+
