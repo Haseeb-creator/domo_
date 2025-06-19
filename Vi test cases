@@ -1,0 +1,183 @@
+import React from 'react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MemoryRouter } from 'react-router-dom';
+import SearchBox from './SearchBox';
+
+// ✅ Setup dynamic mock for useQuery
+let useQueryMock = vi.fn();
+
+vi.mock('@tanstack/react-query', async () => {
+  const actual = await vi.importActual('@tanstack/react-query');
+  return {
+    ...actual,
+    useQuery: (...args) => useQueryMock(...args),
+    QueryClient: actual.QueryClient,
+    QueryClientProvider: actual.QueryClientProvider
+  };
+});
+
+// ✅ Mock useNavigate from react-router-dom
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+    MemoryRouter: actual.MemoryRouter
+  };
+});
+
+// ✅ Helper: render component
+const setup = () => {
+  const queryClient = new QueryClient();
+  render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <SearchBox />
+      </MemoryRouter>
+    </QueryClientProvider>
+  );
+};
+
+afterEach(() => {
+  vi.clearAllMocks(); // reset mocks
+});
+
+describe('SearchBox Component', () => {
+  it('renders component correctly', () => {
+    useQueryMock.mockReturnValue({
+      data: {
+        data: {
+          industryList: [{ industryId: 'ABC123' }]
+        }
+      },
+      isLoading: false,
+      isError: false
+    });
+
+    setup();
+    expect(screen.getByText(/Search MyTravelers/i)).toBeInTheDocument();
+  });
+
+  it('shows error message when input is empty', async () => {
+    useQueryMock.mockReturnValue({
+      data: {
+        data: {
+          industryList: [{ industryId: 'ABC123' }]
+        }
+      },
+      isLoading: false,
+      isError: false
+    });
+
+    setup();
+
+    const searchBox = document.querySelector('tds-search-box');
+
+    fireEvent(
+      searchBox,
+      new CustomEvent('tdsSearched', {
+        detail: { value: '' },
+        bubbles: true,
+        composed: true
+      })
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/An input is required/i)).toBeInTheDocument();
+    });
+  });
+
+  it('navigates to expected URL when valid input is given and industryId is present', async () => {
+    useQueryMock.mockReturnValue({
+      data: {
+        data: {
+          industryList: [{ industryId: 'ABC123' }]
+        }
+      },
+      isLoading: false,
+      isError: false
+    });
+
+    setup();
+    const inputValue = 'testSearch';
+
+    const searchBox = document.querySelector('tds-search-box');
+    fireEvent(
+      searchBox,
+      new CustomEvent('tdsSearched', {
+        detail: { value: inputValue },
+        bubbles: true,
+        composed: true
+      })
+    );
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith(
+        `/business/search/#q=${inputValue}&kindCd=ABC123`
+      );
+    });
+  });
+
+  it('navigates without industryId if API returns empty list', async () => {
+    useQueryMock.mockReturnValue({
+      data: {
+        data: {
+          industryList: []
+        }
+      },
+      isLoading: false,
+      isError: false
+    });
+
+    setup();
+    const inputValue = 'noIndustry';
+
+    const searchBox = document.querySelector('tds-search-box');
+    fireEvent(
+      searchBox,
+      new CustomEvent('tdsSearched', {
+        detail: { value: inputValue },
+        bubbles: true,
+        composed: true
+      })
+    );
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith(
+        `/business/search/#q=${inputValue}`
+      );
+    });
+  });
+
+  it('navigates without industryId if API returns undefined', async () => {
+    useQueryMock.mockReturnValue({
+      data: {
+        data: {}
+      },
+      isLoading: false,
+      isError: false
+    });
+
+    setup();
+    const inputValue = 'undefinedIndustry';
+
+    const searchBox = document.querySelector('tds-search-box');
+    fireEvent(
+      searchBox,
+      new CustomEvent('tdsSearched', {
+        detail: { value: inputValue },
+        bubbles: true,
+        composed: true
+      })
+    );
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith(
+        `/business/search/#q=${inputValue}`
+      );
+    });
+  });
+});
