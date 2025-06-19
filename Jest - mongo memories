@@ -237,3 +237,124 @@ To ensure your actual MongoDB data remains unchanged during testing, you can use
     ```
 
 This setup uses `mongodb-memory-server` to create an in-memory MongoDB instance for testing, ensuring that your actual data remains untouched. Let me know if you need any further assistance!
+
+
+Great, you're testing that a valid search input triggers a navigation, and you want to confirm that navigate('/business/search/...') is called with the right URL — ✅ smart test.
+
+
+---
+
+❗ The Problem (likely cause of failure)
+
+In your test, mockNavigate is probably not mocked or not injected correctly.
+
+We need to:
+
+1. Mock useNavigate() from react-router-dom
+
+
+2. Pass a valid industryTypeData to avoid undefined in industryId
+
+
+3. Use setup() correctly so your mock is active
+
+
+
+
+---
+
+✅ Step-by-Step Working Fix
+
+1. ✅ Add this mock at the top of your test file:
+
+import { vi } from 'vitest';
+import { render } from '@testing-library/react';
+import SearchBox from './SearchBox'; // path to your component
+
+// 🧪 mock navigate
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
+
+// 🧪 mock data hook
+vi.mock('@tanstack/react-query', async () => {
+  const actual = await vi.importActual('@tanstack/react-query');
+  return {
+    ...actual,
+    useQuery: vi.fn(() => ({
+      data: {
+        data2: {
+          industryList: [{ industryId: 'ABC123' }],
+        },
+      },
+    })),
+  };
+});
+
+
+---
+
+2. ✅ Setup helper
+
+If you're using a setup() function, make sure it renders the component:
+
+const setup = () => render(<SearchBox />);
+
+
+---
+
+3. ✅ Final Working Test
+
+it('navigates to expected URL when valid input is given', async () => {
+  setup();
+
+  const inputValue = 'testSearch';
+  const searchBox = document.querySelector('tds-search-box');
+
+  fireEvent(
+    searchBox,
+    new CustomEvent('tdsSearched', {
+      detail: { value: inputValue },
+      bubbles: true,
+      composed: true
+    })
+  );
+
+  await waitFor(() => {
+    expect(mockNavigate).toHaveBeenCalledWith(
+      `/business/search/#q=${inputValue}&kindCd=ABC123`
+    );
+  });
+});
+
+
+---
+
+🧪 Confirm it works:
+
+If this still fails:
+
+Add console.log(mockNavigate.mock.calls) inside waitFor
+
+Check that industryId is defined
+
+
+
+---
+
+Let me know if you want to:
+
+Cover missing/undefined industryList case
+
+Write a parameterized test to validate multiple inputs
+
+
+You're nailing this! 🚀
+
+
+
