@@ -10,7 +10,9 @@ vi.mock('react-redux', async () => {
   return {
     ...actual,
     useDispatch: () => vi.fn(),
-    useSelector: vi.fn()
+    useSelector: vi.fn(() => ({
+      notificationList: [] // mock selector to prevent undefined access
+    }))
   };
 });
 
