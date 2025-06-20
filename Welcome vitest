@@ -3,86 +3,67 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useDispatch } from 'react-redux';
 import WelcomeSummaryContent from '../../../../src/components/welcome-content/welcome-summary-content/WelcomeSummaryContent';
 
-vi.mock('react-redux', () => ({
-  useDispatch: () => vi.fn(),
-}));
+vi.mock('react-redux', async () => {
+  const actual = await vi.importActual('react-redux');
+  return {
+    ...actual,
+    useDispatch: () => vi.fn(),
+    useSelector: vi.fn()
+  };
+});
 
 vi.mock('../../../../../src/utils/notifications', () => ({
   checkExistingNotifications: vi.fn(() => false)
 }));
 
-vi.mock('@tanstack/react-query', async () => {
-  const actual = await vi.importActual('@tanstack/react-query');
+vi.mock('../../../../../src/shared/queries', async () => {
+  const actual = await vi.importActual('../../../../../src/shared/queries');
   return {
     ...actual,
-    useQuery: vi.fn((queryObj) => {
-      const { queryKey } = queryObj;
-
-      if (queryKey.includes('userAccessData')) {
-        return {
-          data: {
-            data2: {
-              userInfo: {
-                entitlements2: ['MYTIBILLING', 'MYTIBPREMAUDIT']
-              }
-            }
-          },
-          isLoading: false,
-          isError: false,
-        };
-      }
-
-      if (queryKey.includes('bannerMessages')) {
-        return {
-          data: {
-            data2: {
-              premiumAuditDuePolicies: [
-                { term: { policyEffectiveDt: '2024-01-01' } }
-              ]
-            }
-          },
-          isLoading: false,
-          isError: false,
-        };
-      }
-
-      if (queryKey.includes('billingData')) {
-        return {
-          data: {
-            data2: {
-              billingGrid1: [
-                { status: 'PASTDUE', billNr: 'BILL123' }
-              ]
-            }
-          },
-          isLoading: false,
-          isError: false,
-        };
-      }
-
-      if (queryKey.includes('claims')) {
-        return {
-          data: {
-            data2: {
-              homeClaimDetails: [{ id: 1 }]
-            }
-          },
-          isLoading: false,
-          isError: false,
-        };
-      }
-
-      return {
-        data: {
-          data2: {}
-        },
-        isLoading: false,
-        isError: false,
-      };
-    }),
+    getUserAccessData: vi.fn(() => ({
+      data: {
+        data2: {
+          userInfo: {
+            entitlements2: ['MYTIBILLING', 'MYTIBPREMAUDIT']
+          }
+        }
+      },
+      isLoading: false,
+      isError: false
+    })),
+    getBannerMessagesData: vi.fn(() => ({
+      data: {
+        data2: {
+          premiumAuditDuePolicies: [
+            { term: { policyEffectiveDt: '2024-01-01' } }
+          ]
+        }
+      },
+      isLoading: false,
+      isError: false
+    })),
+    getBillingData: vi.fn(() => ({
+      data: {
+        data2: {
+          billingGrid1: [
+            { status: 'PASTDUE', billNr: 'BILL123' }
+          ]
+        }
+      },
+      isLoading: false,
+      isError: false
+    })),
+    getOpenClaimsData: vi.fn(() => ({
+      data: {
+        data2: {
+          homeClaimDetails: [{ id: 1 }]
+        }
+      },
+      isLoading: false,
+      isError: false
+    }))
   };
 });
 
@@ -114,14 +95,28 @@ describe('WelcomeSummaryContent', () => {
   });
 
   it('renders nothing if all sources are empty', async () => {
-    const { useQuery } = await import('@tanstack/react-query');
-    useQuery.mockImplementation(() => ({
-      data: {
-        data2: {}
-      },
+    const { getUserAccessData, getBannerMessagesData, getBillingData, getOpenClaimsData } = await import('../../../../../src/shared/queries');
+
+    getUserAccessData.mockReturnValue({
+      data: { data2: {} },
       isLoading: false,
       isError: false,
-    }));
+    });
+    getBannerMessagesData.mockReturnValue({
+      data: { data2: {} },
+      isLoading: false,
+      isError: false,
+    });
+    getBillingData.mockReturnValue({
+      data: { data2: {} },
+      isLoading: false,
+      isError: false,
+    });
+    getOpenClaimsData.mockReturnValue({
+      data: { data2: {} },
+      isLoading: false,
+      isError: false,
+    });
 
     const { container } = renderWithProviders(<WelcomeSummaryContent />);
     await waitFor(() => {
