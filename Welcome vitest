@@ -1,0 +1,131 @@
+// WelcomeSummaryContent.test.jsx
+import React from 'react';
+import { render, screen, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useDispatch } from 'react-redux';
+import WelcomeSummaryContent from '../../../../src/components/welcome-content/welcome-summary-content/WelcomeSummaryContent';
+
+vi.mock('react-redux', () => ({
+  useDispatch: () => vi.fn(),
+}));
+
+vi.mock('../../../../../src/utils/notifications', () => ({
+  checkExistingNotifications: vi.fn(() => false)
+}));
+
+vi.mock('@tanstack/react-query', async () => {
+  const actual = await vi.importActual('@tanstack/react-query');
+  return {
+    ...actual,
+    useQuery: vi.fn((queryObj) => {
+      const { queryKey } = queryObj;
+
+      if (queryKey.includes('userAccessData')) {
+        return {
+          data: {
+            data2: {
+              userInfo: {
+                entitlements2: ['MYTIBILLING', 'MYTIBPREMAUDIT']
+              }
+            }
+          },
+          isLoading: false,
+          isError: false,
+        };
+      }
+
+      if (queryKey.includes('bannerMessages')) {
+        return {
+          data: {
+            data2: {
+              premiumAuditDuePolicies: [
+                { term: { policyEffectiveDt: '2024-01-01' } }
+              ]
+            }
+          },
+          isLoading: false,
+          isError: false,
+        };
+      }
+
+      if (queryKey.includes('billingData')) {
+        return {
+          data: {
+            data2: {
+              billingGrid1: [
+                { status: 'PASTDUE', billNr: 'BILL123' }
+              ]
+            }
+          },
+          isLoading: false,
+          isError: false,
+        };
+      }
+
+      if (queryKey.includes('claims')) {
+        return {
+          data: {
+            data2: {
+              homeClaimDetails: [{ id: 1 }]
+            }
+          },
+          isLoading: false,
+          isError: false,
+        };
+      }
+
+      return {
+        data: {
+          data2: {}
+        },
+        isLoading: false,
+        isError: false,
+      };
+    }),
+  };
+});
+
+const renderWithProviders = (ui) => {
+  const client = new QueryClient();
+  return render(<QueryClientProvider client={client}>{ui}</QueryClientProvider>);
+};
+
+describe('WelcomeSummaryContent', () => {
+  it('renders billing due message if billingData has PASTDUE bill', async () => {
+    renderWithProviders(<WelcomeSummaryContent />);
+    await waitFor(() => {
+      expect(screen.getByText(/bill/i)).toBeInTheDocument();
+    });
+  });
+
+  it('renders open claims when data is available', async () => {
+    renderWithProviders(<WelcomeSummaryContent />);
+    await waitFor(() => {
+      expect(screen.getByText(/claim/i)).toBeInTheDocument();
+    });
+  });
+
+  it('renders premium audit when audit data exists', async () => {
+    renderWithProviders(<WelcomeSummaryContent />);
+    await waitFor(() => {
+      expect(screen.getByText(/premium audit/i)).toBeInTheDocument();
+    });
+  });
+
+  it('renders nothing if all sources are empty', async () => {
+    const { useQuery } = await import('@tanstack/react-query');
+    useQuery.mockImplementation(() => ({
+      data: {
+        data2: {}
+      },
+      isLoading: false,
+      isError: false,
+    }));
+
+    const { container } = renderWithProviders(<WelcomeSummaryContent />);
+    await waitFor(() => {
+      expect(container).toBeEmptyDOMElement();
+    });
+  });
+});
