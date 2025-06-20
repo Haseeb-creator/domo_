@@ -296,3 +296,50 @@ describe('WelcomeSummaryContent', () => {
   });
 });
 
+
+
+vi.mock('../../../shared/queries', async () => {
+  const actual = await vi.importActual('../../../shared/queries');
+  return {
+    ...actual,
+    query: {
+      ...actual.query,
+      getUserAccessData: () => ({
+        queryKey: ['userAccess'],
+        queryFn: () => ({
+          data2: {
+            userInfo: {
+              entitlements2: ['MYTIBILLING', 'MYTIBPREMAUDIT'],
+            },
+          },
+        }),
+      }),
+      getBannerMessagesData: () => ({
+        queryKey: ['bannerMessages'],
+        queryFn: () => ({
+          data2: {
+            premiumAuditDuePolicies: [{ term: { policyEffectiveDt: '2024-01-01' } }],
+          },
+        }),
+      }),
+      getBillingData: () => ({
+        queryKey: ['billing'],
+        queryFn: () => ({
+          data2: {
+            billingGrid1: [{ billNr: '123', status: 'PASTDUE' }],
+          },
+        }),
+      }),
+      getOpenClaimsData: () => ({
+        queryKey: ['claims'],
+        queryFn: () => ({
+          data2: {
+            homeClaimDetails: [{ id: 1 }],
+          },
+        }),
+      }),
+    }
+  };
+});
+
+
