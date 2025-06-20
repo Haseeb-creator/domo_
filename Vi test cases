@@ -343,3 +343,54 @@ vi.mock('../../../shared/queries', async () => {
 });
 
 
+
+vi.mock('../../../../../src/shared/queries', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    query: {
+      ...actual.query,
+      getUserAccessData: () => ({
+        queryKey: ['userAccessData'],
+        queryFn: () => ({
+          data2: {
+            userInfo: {
+              entitlements2: ['MYTIBILLING', 'MYTIBPREMAUDIT']
+            }
+          }
+        }),
+      }),
+      getBannerMessagesData: () => ({
+        queryKey: ['bannerMessages'],
+        queryFn: () => ({
+          data2: {
+            premiumAuditDuePolicies: [
+              { term: { policyEffectiveDt: '2024-01-01' } }
+            ]
+          }
+        }),
+      }),
+      getBillingData: () => ({
+        queryKey: ['billingData'],
+        queryFn: () => ({
+          data2: {
+            billingGrid1: [
+              { billNr: '123', status: 'PASTDUE' }
+            ]
+          }
+        }),
+      }),
+      getOpenClaimsData: () => ({
+        queryKey: ['claims'],
+        queryFn: () => ({
+          data2: {
+            homeClaimDetails: [
+              { id: 1 }
+            ]
+          }
+        }),
+      }),
+    }
+  };
+});
+
