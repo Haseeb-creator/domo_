@@ -181,3 +181,118 @@ describe('SearchBox Component', () => {
     });
   });
 });
+
+
+
+
+
+
+welcome component 
+
+import React from 'react';
+import { render, screen, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useDispatch } from 'react-redux';
+
+import WelcomeSummaryContent from './WelcomeSummaryContent';
+import * as queries from '../../../shared/queries';
+import * as notificationUtils from '../../../../utils/notifications';
+
+// Mock useDispatch
+vi.mock('react-redux', () => ({
+  useDispatch: () => vi.fn(),
+}));
+
+// Mock queries
+vi.mock('../../../shared/queries', () => ({
+  getUserAccessData: vi.fn(),
+  getBannerMessagesData: vi.fn(),
+  getBillingData: vi.fn(),
+  getOpenClaimsData: vi.fn()
+}));
+
+// Mock notifications
+vi.mock('../../../../utils/notifications', () => ({
+  checkExistingNotifications: vi.fn()
+}));
+
+const renderWithProviders = (ui) => {
+  const client = new QueryClient();
+  return render(
+    <QueryClientProvider client={client}>
+      {ui}
+    </QueryClientProvider>
+  );
+};
+
+describe('WelcomeSummaryContent', () => {
+  it('renders notice of cancellation if data exists', async () => {
+    queries.getUserAccessData.mockReturnValue({ data: { data2: { userInfo: { entitlements2: ['MYTIBPOLICY'] } } } });
+    queries.getBannerMessagesData.mockReturnValue({ data: { data2: { premiumAuditDuePolicies: [{ term: { policyEffectiveDt: '2024-06-01' } }] } } });
+    queries.getBillingData.mockReturnValue({ data: { data2: { billingGrid1: [] } } });
+    queries.getOpenClaimsData.mockReturnValue({ data: { data2: { homeClaimDetails: [] } } });
+    notificationUtils.checkExistingNotifications.mockReturnValue(false);
+
+    renderWithProviders(<WelcomeSummaryContent />);
+    
+    await waitFor(() => {
+      expect(screen.getByText(/premium audit/i)).toBeInTheDocument();
+    });
+  });
+
+  it('renders billing due message if billingData has PASTDUE bill', async () => {
+    queries.getUserAccessData.mockReturnValue({ data: { data2: { userInfo: { entitlements2: ['MYTIBBILLING'] } } } });
+    queries.getBannerMessagesData.mockReturnValue({ data: { data2: {} } });
+    queries.getBillingData.mockReturnValue({
+      data: {
+        data2: {
+          billingGrid1: [{ billNr: '123', status: 'PASTDUE' }]
+        }
+      }
+    });
+    queries.getOpenClaimsData.mockReturnValue({ data: { data2: {} } });
+    notificationUtils.checkExistingNotifications.mockReturnValue(false);
+
+    renderWithProviders(<WelcomeSummaryContent />);
+    
+    await waitFor(() => {
+      expect(screen.getByText(/bill due/i)).toBeInTheDocument();
+    });
+  });
+
+  it('renders open claims when claim data is available', async () => {
+    queries.getUserAccessData.mockReturnValue({ data: { data2: {} } });
+    queries.getBannerMessagesData.mockReturnValue({ data: { data2: {} } });
+    queries.getBillingData.mockReturnValue({ data: { data2: {} } });
+    queries.getOpenClaimsData.mockReturnValue({
+      data: {
+        data2: {
+          homeClaimDetails: [{ id: 1 }]
+        }
+      }
+    });
+    notificationUtils.checkExistingNotifications.mockReturnValue(false);
+
+    renderWithProviders(<WelcomeSummaryContent />);
+    
+    await waitFor(() => {
+      expect(screen.getByText(/claim/i)).toBeInTheDocument();
+    });
+  });
+
+  it('renders nothing if all sources are empty', async () => {
+    queries.getUserAccessData.mockReturnValue({ data: { data2: {} } });
+    queries.getBannerMessagesData.mockReturnValue({ data: { data2: {} } });
+    queries.getBillingData.mockReturnValue({ data: { data2: {} } });
+    queries.getOpenClaimsData.mockReturnValue({ data: { data2: {} } });
+    notificationUtils.checkExistingNotifications.mockReturnValue(false);
+
+    const { container } = renderWithProviders(<WelcomeSummaryContent />);
+    
+    await waitFor(() => {
+      expect(container).toBeEmptyDOMElement();
+    });
+  });
+});
+
