@@ -394,3 +394,120 @@ vi.mock('../../../../../src/shared/queries', async (importOriginal) => {
   };
 });
 
+
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import Favorites from '../src/components/fav-control/Favorites';
+import * as service from '../src/services/api/service';
+
+vi.mock('../src/services/api/service');
+
+const queryClient = new QueryClient();
+
+describe('Favorites Component', () => {
+  beforeEach(() => {
+    queryClient.clear();
+  });
+
+  it('should show loading spinner initially', () => {
+    service.callService.mockReturnValue(new Promise(() => {})); // pending promise
+    render(
+      <QueryClientProvider client={queryClient}>
+        <Favorites />
+      </QueryClientProvider>
+    );
+
+    expect(screen.getByRole('status')).toBeInTheDocument(); // loader
+  });
+
+  it('should display no favorites message if data is empty', async () => {
+    service.callService.mockResolvedValue({
+      favourites: { data: [], hostUrl: 'https://example.com' }
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <Favorites />
+      </QueryClientProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/View our library/i)).toBeInTheDocument();
+    });
+  });
+
+  it('should render favorite items if data is available', async () => {
+    service.callService.mockResolvedValue({
+      favourites: {
+        data: [
+          { linkName: 'Link 1', linkName2: 'Link A', url: 'https://a.com' },
+          { linkName: 'Link 2', linkName2: 'Link B', url: 'https://b.com' }
+        ],
+        hostUrl: 'https://example.com'
+      }
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <Favorites />
+      </QueryClientProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Link 1')).toBeInTheDocument();
+      expect(screen.getByText('Link 2')).toBeInTheDocument();
+    });
+  });
+
+  it('should show error alert when API fails', async () => {
+    service.callService.mockRejectedValue(new Error('API failed'));
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <Favorites />
+      </QueryClientProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/unable to show your favorites/i)).toBeInTheDocument();
+    });
+  });
+});
+
+
+
+import { describe, it, expect, vi } from 'vitest';
+import axios from 'axios';
+import callService from '../src/services/api/service';
+
+vi.mock('axios');
+
+describe('callService', () => {
+  it('should make a successful GET request and return data', async () => {
+    const mockData = { data: { success: true } };
+    axios.mockResolvedValueOnce(mockData);
+
+    const response = await callService({
+      method: 'GET',
+      url: '/test-endpoint'
+    });
+
+    expect(axios).toHaveBeenCalledWith(expect.objectContaining({
+      method: 'GET',
+      url: '/test-endpoint',
+      timeout: 20000
+    }));
+
+    expect(response).toEqual(mockData.data);
+  });
+
+  it('should throw an error if request fails', async () => {
+    axios.mockRejectedValueOnce(new Error('Network error'));
+
+    await expect(callService({
+      method: 'GET',
+      url: '/fail-endpoint'
+    })).rejects.toThrow('Network error');
+  });
+});
